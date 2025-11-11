@@ -6,6 +6,13 @@ main.py v1.0
 Coordinates all services: prompt → image → upload → sheet
 """
 
+from dotenv import load_dotenv
+import os
+
+# Force-load the real .env file before importing anything else
+load_dotenv(dotenv_path=".env", override=True)
+print("🔍 ENV check – CLOUDINARY_URL loaded:", bool(os.getenv("CLOUDINARY_URL")))
+
 from datetime import datetime
 from services.prompt_service import generate_prompt
 from services.image_service import generate_image
