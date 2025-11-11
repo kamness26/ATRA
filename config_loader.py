@@ -7,7 +7,8 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path="config/.env.example")
+
+load_dotenv(dotenv_path=".env")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
