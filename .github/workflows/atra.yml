@@ -1,0 +1,37 @@
+name: Run ATRA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-atra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Recreate Google credentials from secret
+        run: |
+          mkdir -p config
+          echo "$GOOGLE_SHEETS_CREDENTIALS_JSON" > config/atra-gsheets.json
+        env:
+          GOOGLE_SHEETS_CREDENTIALS_JSON: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS_JSON }}
+
+      - name: Run ATRA
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLOUDINARY_URL: ${{ secrets.CLOUDINARY_URL }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+          GOOGLE_SHEETS_CREDENTIALS_PATH: config/atra-gsheets.json
+        run: python3 main.py
+
