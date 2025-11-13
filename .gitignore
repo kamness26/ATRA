@@ -4,3 +4,4 @@ venv/
 *.pyc
 *.log
 .DS_Store
+config/atra-gsheets.json
