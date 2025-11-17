@@ -7,13 +7,14 @@ Coordinates all services: prompt → image → upload → sheet → IG
 
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
-# Force-load the real .env file before importing anything else
+# Load environment
 load_dotenv(dotenv_path=".env", override=True)
 print("🔍 ENV check – CLOUDINARY_URL loaded:", bool(os.getenv("CLOUDINARY_URL")))
 
-from datetime import datetime
-from services.post_service import post_to_instagram_webhook
+# Service imports
+from services.post_service import send_to_make_webhook
 from services.prompt_service import generate_prompt
 from services.image_service import generate_image
 from services.upload_service import upload_asset
@@ -23,7 +24,6 @@ from services.sheet_service import update_sheet
 def run_once() -> None:
     """Run the full ATRA pipeline once."""
     print("🚀 ATRA main.py v1.0 – starting run")
-    started_at = datetime.utcnow().isoformat()
 
     prompt = generate_prompt()
     print(f"🧠 Prompt generated: {prompt}")
@@ -35,12 +35,13 @@ def run_once() -> None:
     print(f"☁️ Uploaded image to: {image_path}")
 
     update_sheet(prompt, image_url)
-    print(f"📒 Sheet updated successfully at {started_at}")
+    print("📒 Sheet updated successfully")
 
-    # Post to Instagram via Make.com webhook
+    # IG Webhook
     WEBHOOK_URL = "https://hook.us2.make.com/cx9uy79z1rar2h907adqw8mhbunppnt7"
+
     print("📨 Sending post to Instagram...")
-    posted = post_to_instagram_webhook(prompt, image_url, WEBHOOK_URL)
+    posted = send_to_make_webhook(prompt, image_url, WEBHOOK_URL)
 
     if posted:
         print("✅ Instagram post sent successfully.")
