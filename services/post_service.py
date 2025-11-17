@@ -1,6 +1,7 @@
 """
 Post Service
-Sends posts to Make.com Instagram webhook with retry logic
+Sends posts to Make.com Instagram webhook with
+a controlled pre-delay AND retry/backoff logic
 to avoid IG Error 9007 (media not available).
 """
 
@@ -10,7 +11,7 @@ from datetime import datetime
 
 
 def send_to_make_webhook(caption: str, image_url: str, webhook_url: str) -> bool:
-    """Send post data to Make.com webhook with retry/backoff for IG 9007 issues."""
+    """Send post data to Make.com webhook with predictable timing."""
 
     payload = {
         "caption": caption,
@@ -18,11 +19,16 @@ def send_to_make_webhook(caption: str, image_url: str, webhook_url: str) -> bool
         "timestamp": datetime.utcnow().isoformat()
     }
 
-    print("📨 Sending post to Instagram through Make.com...")
+    print("📨 Preparing Instagram post via Make.com...")
+
+    # 🔥 Instagram fix: allow Cloudinary image to fully propagate
+    PRE_DELAY = 6
+    print(f"⏳ Waiting {PRE_DELAY}s to allow Cloudinary/CDN propagation...")
+    time.sleep(PRE_DELAY)
 
     # Retry settings
     max_attempts = 3
-    backoff_seconds = [2, 4, 6]  # Wait times between retries
+    backoff_seconds = [2, 4, 6]
 
     for attempt in range(1, max_attempts + 1):
         try:
@@ -46,7 +52,7 @@ def send_to_make_webhook(caption: str, image_url: str, webhook_url: str) -> bool
         # If not last attempt, wait before retry
         if attempt < max_attempts:
             wait = backoff_seconds[attempt - 1]
-            print(f"⏳ Waiting {wait} seconds before retry...")
+            print(f"⏳ Waiting {wait}s before retry...")
             time.sleep(wait)
 
     print("❌ Failed to send post after multiple attempts.")
