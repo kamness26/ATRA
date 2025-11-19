@@ -31,7 +31,7 @@ def send_to_make_webhook(caption: str, image_url: str, webhook_url: str) -> bool
     print("📨 Preparing Instagram post via Make.com...")
 
     # Instagram fix — allow Cloudinary image URL to fully propagate
-    PRE_DELAY = 6
+    PRE_DELAY = 12
     print(f"⏳ Waiting {PRE_DELAY}s to allow Cloudinary/CDN propagation...")
     time.sleep(PRE_DELAY)
 
