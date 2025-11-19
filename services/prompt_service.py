@@ -1,36 +1,58 @@
 """
-Prompt Service
-Generates witty, chaotic, journal-selling ad prompts for 'You Won’t Believe This $H!T'.
+Prompt Service – ATRA v1.9
+Generates witty, chaotic, Gen Z–centric journaling prompts that promote
+'You Won’t Believe This $H!T' through humor, self-awareness, and relatable absurdity.
 """
 
-from openai import OpenAI
-import os
 import random
+from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI()
 
-SCENES = [
-    "realizing your horoscope was right for all the wrong reasons",
-    "apologizing to your barista for trauma-dumping again",
-    "overthinking a text you haven’t even sent yet",
-    "celebrating a small win like it’s a Grammy",
-    "convincing yourself that scrolling counts as self-care",
-    "telling your therapist you’re fine while clearly not fine",
-    "finding clarity halfway through a nervous breakdown",
-    "pretending Mercury retrograde explains your entire personality",
+TONE_GUIDE = """
+You are Greg — a Gen Z ad exec who writes witty micro-prompts for social posts
+promoting the chaotic journaling brand *You Won’t Believe This $H!T*.
+
+Tone:
+- Funny, self-aware, slightly unhinged
+- Reflective yet playful (like if therapy had memes)
+- Short, readable in under 10 seconds
+- Each prompt must make the reader laugh, nod, or feel seen
+- Always tie chaos → journaling as the outlet (directly or subtly)
+
+Do NOT sound like an ad.
+No hashtags. No emojis.
+Write as if the brand is your inner monologue turned printable.
+"""
+
+PROMPT_STARTERS = [
+    "When your brain is buffering but life’s in 4K…",
+    "Therapy’s great, but have you tried talking to your journal instead?",
+    "If overthinking was cardio, I’d have abs by now.",
+    "The chaos is free; the journaling is optional, but recommended.",
+    "My intrusive thoughts just applied for creative direction.",
+    "Somehow, Mercury’s in retrograde *and* so am I.",
+    "We’re calling it ‘self-reflection,’ but it’s really just a recap of bad decisions.",
+    "Another episode of ‘Who Approved My Life Choices?’ just dropped.",
+    "If my mind had pop-up ads, today’s would say: ‘Write it down before you combust.’",
+    "Chaos called. I answered with a pen."
 ]
 
-def generate_prompt() -> str:
-    """Generate a short, ad-style micro scene that sells journaling as cathartic humor."""
-    scene = random.choice(SCENES)
-    instruction = f"""
-    Write one clever, funny, ad-style caption promoting the journal
-    'You Won’t Believe This $H!T'. Describe {scene} with wit and modern chaos energy.
-    It should sound like a social post that makes people laugh and think “yeah, same.”
-    End with a playful journaling nudge like “yeah, write that down,” “document the chaos,”
-    or “the journal won’t fill itself.” Max 3 sentences.
-    """
+def generate_prompt():
+    starter = random.choice(PROMPT_STARTERS)
+    messages = [
+        {"role": "system", "content": TONE_GUIDE},
+        {"role": "user", "content": f"Write one short journaling prompt starting with: '{starter}'"}
+    ]
 
-    response = client.responses.create(model="gpt-4.1-mini", input=instruction)
-    return response.output_text.strip()
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        max_tokens=100,
+        temperature=0.9
+    )
+
+    text = response.choices[0].message.content.strip()
+    print(f"🧠 Generated witty chaos prompt: {text}")
+    return text
 

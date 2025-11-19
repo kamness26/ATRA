@@ -1,17 +1,26 @@
 """
 Post Service
-Sends posts to Make.com Instagram webhook with
-a controlled pre-delay AND retry/backoff logic
-to avoid IG Error 9007 (media not available).
+Sends posts to Make.com Instagram webhook with:
+- API key authentication
+- Controlled pre-delay for Cloudinary propagation
+- Retry/backoff logic to avoid IG Error 9007 (media not available)
 """
 
 import time
 import requests
 from datetime import datetime
 
+# ---------------------------
+# CHANGE THIS TO YOUR REAL KEY
+# ---------------------------
+MAKE_API_KEY = "atra_2025_supersecret"
+# (Matches the API key you set in Make.com)
+
 
 def send_to_make_webhook(caption: str, image_url: str, webhook_url: str) -> bool:
-    """Send post data to Make.com webhook with predictable timing."""
+    """Send post data to Make.com webhook with predictable timing
+    and correct API key authentication.
+    """
 
     payload = {
         "caption": caption,
@@ -21,7 +30,7 @@ def send_to_make_webhook(caption: str, image_url: str, webhook_url: str) -> bool
 
     print("📨 Preparing Instagram post via Make.com...")
 
-    # 🔥 Instagram fix: allow Cloudinary image to fully propagate
+    # Instagram fix — allow Cloudinary image URL to fully propagate
     PRE_DELAY = 6
     print(f"⏳ Waiting {PRE_DELAY}s to allow Cloudinary/CDN propagation...")
     time.sleep(PRE_DELAY)
@@ -37,6 +46,7 @@ def send_to_make_webhook(caption: str, image_url: str, webhook_url: str) -> bool
             response = requests.post(
                 webhook_url,
                 json=payload,
+                headers={"x-make-apikey": MAKE_API_KEY},
                 timeout=15
             )
 
