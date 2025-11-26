@@ -31,7 +31,7 @@ def send_to_make_webhook(
     print("📨 Preparing Instagram + Facebook post via Make.com...")
 
     # Allow Cloudinary CDN propagation
-    PRE_DELAY = 6
+    PRE_DELAY = 12
     print(f"⏳ Waiting {PRE_DELAY}s to allow Cloudinary/CDN propagation...")
     time.sleep(PRE_DELAY)
 
