@@ -188,7 +188,7 @@ ATRA v1.1 is fully operational.
 Multi-platform posting is stable.
 Next milestone: analytics ingestion + Joanie-based optimization intelligence.
 
-🫡 Credits
+🫡Credits
 
 Built by Kam (with a K).
 Engineered to turn chaos into content — automatically.
