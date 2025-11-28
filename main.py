@@ -1,9 +1,9 @@
-# ATRA OVERRIDE HEADER
+# 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of main.py.
 
 """
 ATRA Automation Orchestrator
-main.py v1.1
+main.py v1.3 – Joanie Personality Modes (Phase 2: Mood Persistence)
 
 Coordinates all services:
 prompt → image → upload → sheet → IG + FB (via Make.com)
@@ -11,6 +11,8 @@ prompt → image → upload → sheet → IG + FB (via Make.com)
 
 from dotenv import load_dotenv
 import os
+import json
+import random
 from datetime import datetime
 
 # Load environment
@@ -28,17 +30,112 @@ from services.caption_service import (
     generate_facebook_caption
 )
 
+# Joanie personality modes
+PERSONALITY_MODES = {
+    "corporate_burnout": "😵‍💼",
+    "adhd_spiral": "🌀",
+    "delusional_romantic": "💘",
+    "existentially_exhausted": "🫠",
+    "sunday_scaries": "😨",
+}
 
+STATE_FILE = "state/joanie_history.json"
+
+
+# ---------------------------------------------------------
+# Phase 2: Mood Persistence Engine (Tier B)
+# ---------------------------------------------------------
+def _load_history():
+    """Load last 5 modes from state file."""
+    if not os.path.exists("state"):
+        os.makedirs("state")
+
+    if not os.path.isfile(STATE_FILE):
+        return []
+
+    try:
+        with open(STATE_FILE, "r") as f:
+            data = json.load(f)
+            return data.get("recent_modes", [])
+    except:
+        return []
+
+
+def _save_history(history):
+    """Save the last 5 modes."""
+    with open(STATE_FILE, "w") as f:
+        json.dump({"recent_modes": history[-5:]}, f)
+
+
+def choose_joanie_mode():
+    """Choose next Joanie mode using:
+    - No repetition
+    - Recency down-weighting
+    - Rarity boosting
+    - Sunday override
+    """
+    history = _load_history()
+    today = datetime.now().strftime("%A")
+
+    # --- 1. Sunday Scaries override ---
+    if today == "Sunday":
+        # But avoid repeating
+        if len(history) == 0 or history[-1] != "sunday_scaries":
+            _save_history(history + ["sunday_scaries"])
+            return "sunday_scaries"
+
+    last = history[-1] if history else None
+
+    # --- 2. Base weights ---
+    weights = {
+        mode: 1.0 for mode in PERSONALITY_MODES.keys()
+    }
+
+    # --- 3. No immediate repetition ---
+    if last in weights:
+        weights[last] = 0.0
+
+    # --- 4. Recency down-weighting ---
+    # recent modes get suppressed slightly
+    for i, recent_mode in enumerate(reversed(history)):
+        if recent_mode in weights and weights[recent_mode] > 0:
+            weights[recent_mode] *= (0.7 - 0.1 * i)  # gradually less
+
+    # --- 5. Rarity boosting ---
+    # modes not seen in 5 runs get boosted
+    for mode in PERSONALITY_MODES:
+        if mode not in history:
+            weights[mode] *= 1.6
+
+    # Normalize and pick
+    pool = [(m, w) for m, w in weights.items() if w > 0]
+    modes, wts = zip(*pool)
+    chosen = random.choices(modes, weights=wts, k=1)[0]
+
+    # Save
+    _save_history(history + [chosen])
+
+    return chosen
+
+
+# ---------------------------------------------------------
+# Main pipeline
+# ---------------------------------------------------------
 def run_once() -> None:
     """Run the full ATRA pipeline once."""
-    print("🚀 ATRA main.py v1.1 – starting run")
+    print("🚀 ATRA main.py v1.3 – starting run (Phase 2 enabled)")
+
+    # 0. Choose Joanie personality mode (Phase 2 engine)
+    mode = choose_joanie_mode()
+    emoji = PERSONALITY_MODES[mode]
+    print(f"🎭 Joanie Mode → {mode} {emoji}")
 
     # 1. Generate base journaling prompt
-    prompt = generate_prompt()
+    prompt = generate_prompt(mode)
     print(f"🧠 Prompt generated: {prompt}")
 
     # 2. Generate image using brand rules
-    image_path = generate_image(prompt)
+    image_path = generate_image(prompt, mode)
     print(f"🎨 Image generated at: {image_path}")
 
     # 3. Upload to Cloudinary
@@ -50,8 +147,8 @@ def run_once() -> None:
     print("📒 Sheet updated successfully")
 
     # 5. Generate platform-specific captions
-    ig_caption = generate_instagram_caption(prompt)
-    fb_caption = generate_facebook_caption(prompt)
+    ig_caption = generate_instagram_caption(prompt, mode)
+    fb_caption = generate_facebook_caption(prompt, mode)
 
     print(f"📝 IG Caption: {ig_caption}")
     print(f"📝 FB Caption: {fb_caption}")
@@ -77,4 +174,3 @@ def run_once() -> None:
 
 if __name__ == "__main__":
     run_once()
-
