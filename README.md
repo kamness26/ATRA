@@ -2,91 +2,47 @@ ATRA — Automated Thought-to-Reality Accelerator
 
 (Pronounced: AHT-rah)
 
-Multi-service advertising engine automating everything from AI-driven content creation to cross-platform distribution and data-based strategy optimization.
+Multi-service advertising engine automating everything from AI-driven content creation to cross-platform posting and data-based strategy optimization.
 
-ATRA is an end-to-end automation system that generates, designs, uploads, logs, and distributes branded content with no manual steps required. Originally built to power the social ecosystem for “You Won’t Believe This $H!T”, ATRA now functions as a scalable creative and advertising pipeline — and as of v1.3, it also adapts dynamically to the new Joanie Persona Framework.
+ATRA is an end-to-end automation system that generates, designs, uploads, logs, and distributes branded content with zero manual intervention.
+Built originally for the social ecosystem of “You Won’t Believe This $H!T,” ATRA is now a scalable creative + advertising pipeline.
 
-🚀 Current Capabilities (ATRA v1.3 – Joanie Release)
+🚀 Current Capabilities (ATRA v1.1)
+1. AI-Driven Prompt & Caption Generation
 
-ATRA automates the full content lifecycle:
+Witty, high-engagement micro-prompts
 
-✅ 1. Personality-Adaptive Prompt Generation (Joanie Engine)
+Platform-specific captions (IG + FB)
 
-ATRA now supports five personality modes, selected automatically per run:
+Tone-consistent, brand-accurate writing
 
-corporate_burnout 😵‍💼
+2. Brand-Accurate AI Image Generation
 
-adhd_spiral 🌀
+Using GPT-Image-1, ATRA produces 1024×1024 poster-style graphics that must follow strict brand rules:
 
-delusional_romantic 💘
+One short headline (8–12 words)
 
-existentially_exhausted 🫠
+Mandatory upside-down smiling Atty
 
-sunday_scaries 😨
+8%+ safe margins
 
-Each run selects one persona and produces:
+Minimal color systems (core or campaign)
 
-A persona-shaped journaling prompt
+No people, mascots, clip art, or small body text
 
-Persona-adapted humor and tone
+3. Cloudinary Hosting
 
-Deep alignment with Joanie’s world
+Raw, untransformed asset upload
 
-More emotionally resonant content and higher engagement
+Stable CDN URL for IG/FB
 
-✅ 2. AI-Driven Caption Generation (Persona-Aware)
+Compatible with media validators
 
-ATRA generates:
+4. Google Sheets Logging
 
-Instagram captions
-
-1 punchy line (8–20 words)
-
-Persona-aware tone (e.g., “corporate burnout sarcasm,” “ADHD chaos”)
-
-Facebook captions
-
-Mini-stories, 1–2 sentences
-
-Persona-aligned micro-narratives
-
-Exactly one emoji (per rules)
-
-All captions take the selected Joanie mode into account.
-
-✅ 3. Brand-Accurate AI Image Generation (Persona-Aware)
-
-Strict rules enforced across all modes:
-
-1024×1024 poster-style graphics
-
-Mandatory upside-down smiling Atty icon
-
-Safe margins (8%+)
-
-8–12 word headline
-
-Never include people, mascots, clip art
-
-Persona-appropriate palette and thematic flavoring (under development)
-
-The system outputs the final PNG locally and for Cloudinary upload.
-
-✅ 4. Cloudinary Hosting
-
-Raw image upload
-
-Stable secure CDN URL
-
-Compatible with IG and FB posting pipelines
-
-✅ 5. Google Sheets Content Ledger
-
-Each automated run logs:
+Each run writes:
 
 Prompt
-
-Persona mode
 
 IG caption
 
@@ -96,19 +52,16 @@ Image URL
 
 Timestamp
 
-This provides a complete, queryable content history.
+Acts as a real-time content ledger + audit trail.
 
-✅ 6. Cross-Platform Distribution (IG + FB)
+5. Cross-Platform Distribution
 
-ATRA packages this payload:
+ATRA sends to Make.com:
 
-{
-  "ig_caption": "...",
-  "fb_caption": "...",
-  "image_url": "...",
-  "persona_mode": "...",
-  "timestamp": "..."
-}
+ig_caption
+fb_caption
+image_url
+timestamp
 
 
 Make.com handles:
@@ -117,55 +70,32 @@ Instagram Business posting
 
 Facebook Page posting
 
-All triggered through a single webhook.
+All automated in one unified webhook call.
 
-✅ 7. Reliability & Delivery Guarantees
+6. Reliability Layer
 
-Retry logic
+CDN propagation delay handling
 
 Exponential backoff
 
-Cloudinary URL propagation checks
+Request retries
 
-Structured failure outputs
+Structured error logs
 
-GitHub Action logs for traceability
-
-✅ 8. Automated Scheduling via GitHub Actions
+7. Automated Scheduling via GitHub Actions
 
 ATRA can run:
 
-On a nightly schedule
+On a daily schedule
 
-On-demand via GitHub
+On-demand
 
-Locally via terminal (python main.py)
+Locally for testing
 
-This enables fully autonomous brand operation.
+A fully hands-off publishing engine.
 
-🧠 The Joanie Persona Engine
-
-ATRA v1.3 introduced the persona piping architecture, where the selected mode influences:
-
-Prompt generation
-
-Image style
-
-Caption voice
-
-Emotional framing
-
-Post structure
-
-Future analytics segments
-
-This is the foundation for future phases (analytics → optimization → autonomous director).
-
-🧩 Updated Architecture Overview (Joanie Release)
+🧩 Architecture Overview
 ATRA (Local or GitHub Actions)
-              |
-              v
-     Persona Engine (Joanie)
               |
               v
       Prompt Service (GPT)
@@ -174,7 +104,7 @@ ATRA (Local or GitHub Actions)
       Image Service (DALL·E)
               |
               v
-     Upload Service (Cloudinary)
+      Upload Service (Cloudinary)
               |
               v
       Sheet Service (Google Sheets)
@@ -185,74 +115,81 @@ ATRA (Local or GitHub Actions)
               v             v
     Instagram Business   Facebook Page
 
-📅 Feature Matrix: Current & Future
+📅 Feature Matrix
 Component	Description	Status
-Joanie persona engine	5 personality modes	LIVE
-Persona-aware prompts	Emotional tone matching	LIVE
-Persona-aware captions (IG/FB)	Voice shifts per mode	LIVE
-AI image generation	Brand rules enforced	LIVE
-Cloudinary upload	CDN-ready assets	LIVE
-Google Sheets logging	Content archive	LIVE
-IG + FB posting	Unified webhook	LIVE
-Reliability guardrails	Backoff, retries	LIVE
+AI prompt + caption generation	Platform-aware, on-brand	LIVE
+AI image generation	Atty rules + layout system	LIVE
+Cloudinary upload	Raw asset hosting	LIVE
+Google Sheets logging	Post ledger	LIVE
+IG + FB posting	Unified webhook payload	LIVE
+Retry/backoff	Reliable delivery	LIVE
 Scheduled automation	GitHub Actions	LIVE
-Persona-aware image theming	Color/palette per mode	PHASE 2
-Performance analytics ingestion	IG / FB / KDP	PLANNED
-Data-driven optimization	Headline, style, palette tuning	PLANNED
-Sora video generation	Multi-format campaigns	PLANNED
-Autonomous creative director	Agent that controls strategy	PLANNED
-Closed-loop optimization	A/B testing + self-learning	PLANNED
-🔮 Roadmap
-🟦 Phase 2 — Persona-Driven Media & Analytics
+Analytics ingestion	IG/FB Insights, KDP	PLANNED
+Sales correlation	Content → sales mapping	PLANNED
+Data optimization engine	Layout/tone/palette tuning	PLANNED
+Autonomous A/B testing	Caption + headline experiments	PLANNED
+Posting-time optimization	Predictive scheduling	PLANNED
+Sora video generation	Multi-format expansion	PLANNED
+Agentic creative director	Campaign-level decision-making	PLANNED
+🔮 Roadmap: Toward Closed-Loop Optimization
+🟦 Phase 2 — Analytics Ingestion
 
-Persona-specific palettes
+IG Insights
 
-Persona-specific templates
+FB performance
 
-IG insights ingestion
+Amazon KDP sales
 
-KDP sales sync
+Attribution tracking
 
-🟧 Phase 3 — Optimization Engine
+🟧 Phase 3 — Data-Based Optimization
 
-Multi-variant headline testing
+ATRA will automatically:
 
-Persona-performance modeling
+Tune tone, length, palette, layout
 
-Automatic content tuning
+Prefer high-performing patterns
+
+Retire low performers
+
+Build memory of what works
 
 🟩 Phase 4 — Intelligent Scheduling
 
 Predictive posting times
 
-Persona-based cadence
+Auto-calendar generation
+
+7–30 day content planning
 
 🟥 Phase 5 — Autonomous Creative Director
 
-Theme curation
+Dictates themes
 
-Multi-week editorial arcs
+Designs campaign arcs
 
-Sora-based motion campaigns
+Generates Sora videos
 
-🟪 Phase 6 — Fully Autonomous A/B System
+Manages pacing + variation
 
-Runs tests
+🟪 Phase 6 — Closed-Loop Self-Optimizing System
 
-Learns outcomes
+Pulls metrics
 
-Adapts without human input
+Generates hypotheses
+
+Runs A/B tests
+
+Iterates automatically
 
 🏁 Status
 
-ATRA v1.3 is live and stable.
-Joanie modes are fully operational.
-Posting pipeline is end-to-end autonomous.
-
-Next mission: Persona-aware image generation + analytics ingestion.
+ATRA v1.1 is fully operational.
+Multi-platform posting is stable.
+Next milestone: analytics ingestion + Joanie-based optimization intelligence.
 
 🫡 Credits
 
 Built by Kam (with a K).
-Engineered to turn inner chaos into automated outward creativity.
+Engineered to turn chaos into content — automatically.
 Powered by OpenAI, Cloudinary, Google Sheets, Make.com, and GitHub Actions.
