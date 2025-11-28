@@ -1,11 +1,16 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
-# Regenerate the code below with the suggested changes only.
+# Regenerated for Phase 1: Joanie Personality Modes (Mixed Explicitness)
 
 """
-Prompt Service – ATRA v1.9 (Joanie Edition)
-Generates chaotic-feminine, self-aware journaling prompts for the
-‘You Won’t Believe This $H!T’ brand, aligned with the Joanie persona.
+Prompt Service – ATRA (Joanie Edition v2.0)
+
+Generates journaling prompts influenced by Joanie’s five emotional modes:
+- corporate_burnout (explicit)
+- adhd_spiral (implicit)
+- delusional_romantic (implicit)
+- existentially_exhausted (implicit)
+- sunday_scaries (explicit)
 """
 
 import random
@@ -13,56 +18,96 @@ from openai import OpenAI
 
 client = OpenAI()
 
-TONE_GUIDE = """
-You are Joanie — a chaotic, corporate-burnout, ADHD-coded, emotionally self-aware
-millennial/Gen Z woman who uses humor as coping.
+# Explicit-mode intros
+EXPLICIT_PREFIX = {
+    "corporate_burnout": "In full corporate burnout mode, ",
+    "sunday_scaries": "With the Sunday Scaries creeping in, ",
+}
 
-Tone:
-- Feminine, messy, pretty-unhinged (but in a charming way)
-- Corporate girlie burnout + dating app fatigue + delusional optimism
-- “Organized chaos” energy, journaling as survival
-- Short enough to read in 5–10 seconds
-- Prompts should feel like emotional receipts Joanie writes to her future self
-- Relatable, punchy, and a little dramatic
+# Implicit seeds for mixed-mode influence
+IMPLICIT_SEEDS = {
+    "adhd_spiral": [
+        "Write about the thought that sprinted through your brain for no reason today.",
+        "Journal the mental side quest that derailed your whole afternoon.",
+        "Describe a moment where your brain chose chaos instead of logic.",
+        "Write about something tiny that your mind turned into a whole event.",
+    ],
+    "delusional_romantic": [
+        "Explain the entirely fictional relationship you formed from one glance.",
+        "Write a poetic recap of your latest delusional crush moment.",
+        "Document the red flag you rebranded as ‘quirky.’",
+        "Describe the rom-com scene your brain staged today without permission.",
+    ],
+    "existentially_exhausted": [
+        "Write about the moment today where you questioned your entire existence for no reason.",
+        "Describe a tiny moment that made you spiral into deep thoughts.",
+        "Journal the feeling of being emotionally logged out but still functioning.",
+        "Write about a time today when everything felt a little too… cosmic.",
+    ],
+}
 
-Do NOT sound inspirational.
-Do NOT use hashtags or emojis.
-Do NOT turn into a self-help quote.
-Write like the brand is your internal monologue after a long day.
-"""
+# Explicit-mode seed lists
+EXPLICIT_SEEDS = {
+    "corporate_burnout": [
+        "write about the meeting today that should’ve been an email.",
+        "describe the task that drained 80% of your soul.",
+        "journal the moment you pretended to care on a Zoom call.",
+        "write about the micro-rage that kept you awake last night.",
+    ],
+    "sunday_scaries": [
+        "write about the dread lurking in the back of your mind.",
+        "describe why Monday already feels like a threat.",
+        "journal the thing you’re avoiding for no real reason.",
+        "write about the self-negotiation you’re doing to get through tonight.",
+    ],
+}
 
-PROMPT_STARTERS = [
-    "Write about the last time you pretended a red flag was beige.",
-    "Explain what your ADHD brain thought it was accomplishing today.",
-    "Document the receipts from your latest delusional decision.",
-    "Tell future-you why you ghosted someone who was actually nice.",
-    "Unpack a thought spiral that never needed that much attention.",
-    "Describe the chaos that spilled out of your tote bag this week.",
-    "Confess a thing you'd lie about on a dating app.",
-    "Break down the tiny inconvenience that ruined your whole vibe.",
-    "Write a dramatic recap of a completely normal day.",
-    "Share the moment you realized corporate life is performance art.",
-    "Explain the emotional logic behind your last impulse purchase.",
-    "Write the journal entry your therapist would call ‘interesting.’",
-    "Describe the situation you’re still overthinking from last year.",
-    "Unpack the delusion that kept you going today.",
-    "Review your own behavior from the last 48 hours."
-]
 
-def generate_prompt():
-    starter = random.choice(PROMPT_STARTERS)
-    messages = [
-        {"role": "system", "content": TONE_GUIDE},
-        {"role": "user", "content": f"Write one short journaling prompt starting with: '{starter}'"}
-    ]
+def generate_prompt(mode: str) -> str:
+    """
+    Generate a single Joanie-coded journaling prompt based on mood.
+    Mixed explicitness:
+    - some moods referenced directly
+    - others influence tone/seed implicitly
+    """
+    # Explicit modes (corporate_burnout, sunday_scaries)
+    if mode in EXPLICIT_PREFIX:
+        prefix = EXPLICIT_PREFIX[mode]
+        seed = random.choice(EXPLICIT_SEEDS[mode])
+        starter = f"{prefix}{seed}"
+    else:
+        # Implicit modes (ADHD, romantic delusion, existential exhaustion)
+        starter = random.choice(IMPLICIT_SEEDS[mode])
+
+    system_prompt = f"""
+    You are Joanie — a chaotic, self-aware, feminine narrator writing
+    journaling prompts for 'You Won’t Believe This $H!T'.
+
+    Mode: {mode}
+
+    Guidelines:
+    - Short, punchy, personal, emotional, very human.
+    - Tone intensity depends on mode:
+        * corporate_burnout → drier, sarcastic
+        * adhd_spiral → frantic, racing thoughts, playful
+        * delusional_romantic → dreamy, dramatic, almost poetic
+        * existentially_exhausted → weary, cosmic, overthinking
+        * sunday_scaries → dread mixed with humor
+    - NO hashtags. NO emojis. NO inspirational quotes.
+    - Must read like something Joanie would actually journal.
+    - Max length: ~22 words.
+    """
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=messages,
-        max_tokens=100,
-        temperature=0.9
+        messages=[
+            {"role": "system", "content": system_prompt.strip()},
+            {"role": "user", "content": starter},
+        ],
+        temperature=0.9,
+        max_tokens=60,
     )
 
     text = response.choices[0].message.content.strip()
-    print(f"🧠 Generated Joanie-style prompt: {text}")
+    print(f"🧠 Generated Joanie prompt ({mode}): {text}")
     return text
