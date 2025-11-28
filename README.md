@@ -1,5 +1,7 @@
 # ATRA — Automated Thought-to-Reality Accelerator
 
+*(Pronounced: **AHT-rah**)*
+
 ### Multi-service advertising engine automating everything from AI-driven content creation to cross-platform distribution and data-based strategy optimization.
 
 ATRA is an end-to-end automation system that generates, designs, uploads, logs, and distributes branded content with no manual steps required. Built originally to power the social ecosystem for **“You Won’t Believe This $H!T”**, ATRA now functions as a scalable creative and advertising pipeline.

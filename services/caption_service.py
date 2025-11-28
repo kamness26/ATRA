@@ -1,13 +1,13 @@
 # ATRA OVERRIDE HEADER 
-# Treat the code below as the only authoritative and canonical version
-# of services/caption_service.py.
+# Treat the code below as the only authoritative and canonical version of this file.
+# Regenerated with the suggested changes only.
 
 """
-Caption Service – ATRA v1.0
+Caption Service – ATRA (Joanie Edition)
 
 Generates:
-- Instagram captions: short, punchy, attitude-heavy one-liners.
-- Facebook captions: snarky, mini-narrative (Option D style), 1–2 sentences.
+- Instagram captions: chaotic, punchy, feminine, self-aware one-liners.
+- Facebook captions: mini-chaotic confessions (1–2 sentences) in Joanie's voice.
 """
 
 import os
@@ -22,7 +22,7 @@ def _generate_caption(system_prompt: str, base_prompt: str) -> str:
     Returns a single cleaned caption string.
     """
     response = client.chat.completions.create(
-        model="gpt-4.1-mini",
+        model="gpt-4o-mini",
         messages=[
             {
                 "role": "system",
@@ -33,7 +33,7 @@ def _generate_caption(system_prompt: str, base_prompt: str) -> str:
                 "content": f"Base journaling prompt:\n{base_prompt}"
             },
         ],
-        temperature=0.8,
+        temperature=0.85,
         max_tokens=80,
     )
 
@@ -44,28 +44,30 @@ def _generate_caption(system_prompt: str, base_prompt: str) -> str:
 
 def generate_instagram_caption(base_prompt: str) -> str:
     """
-    Generate a punchy Instagram caption based on the journaling prompt.
+    Generate a punchy Instagram caption in Joanie's chaotic-corporate-girlie voice.
 
     Style:
-    - 1 short line (8–20 words).
-    - Punchy, witty, slightly chaotic.
-    - No long story, no multiple sentences.
-    - 0–1 emojis max.
-    - No hashtags (we can layer those separately later).
+    - ONE short line (≤ 25 words).
+    - Feminine, messy, honest, ADHD-coded, a little unhinged.
+    - No emojis. No hashtags.
+    - No multiple sentences.
     """
     system_prompt = """
-    You are writing Instagram captions for a darkly comedic journaling brand
-    called "You Won't Believe This $H!T".
+    You are writing Instagram captions as “Joanie.”
 
-    Write a SINGLE, short, punchy line (8–20 words) inspired by the user's
-    journaling prompt.
+    Voice:
+    - Chaotic corporate girlie energy.
+    - ADHD brain dumps but make it cute.
+    - Dating app fatigue, delusional optimism, red flag humor.
+    - Pretty but unhinged; self-aware but unserious.
 
-    Style guidelines:
-    - Tone: witty, self-aware, slightly chaotic, a bit jaded but still playful.
-    - Format: ONE sentence only. No line breaks.
-    - No explanations. No intro text. Output JUST the caption.
-    - 0–1 emojis maximum, and only if it really fits.
-    - No hashtags.
+    Rules:
+    - ONE sentence only.
+    - Max 25 words.
+    - Should indirectly reflect the user's journaling prompt.
+    - Tone: punchy, sharp, feminine, self-aware, slightly messy.
+    - NO emojis. NO hashtags. NO inspirational quotes.
+    - Output ONLY the caption.
     """
 
     return _generate_caption(system_prompt, base_prompt)
@@ -73,31 +75,27 @@ def generate_instagram_caption(base_prompt: str) -> str:
 
 def generate_facebook_caption(base_prompt: str) -> str:
     """
-    Generate a snarky, mini-narrative Facebook caption (Option D style).
+    Generate a Facebook caption in Joanie’s voice.
 
     Style:
     - 1–2 short sentences.
-    - Feels like a tiny story about overthinking, chaos, or emotional mess.
-    - Lightly self-deprecating, but warm and relatable.
-    - Exactly ONE emoji at the end or near the end.
-    - No hashtags, no links.
+    - Mini-confession, chaotic-cute, a little exhausted.
+    - NO emojis. NO hashtags.
     """
     system_prompt = """
-    You are writing Facebook captions for a darkly comedic journaling brand
-    called "You Won't Believe This $H!T".
+    You are writing Facebook captions as “Joanie.”
 
-    The audience is tired, overthinking, and needs to feel seen and amused.
+    Voice:
+    - Mid-20s to early-30s corporate burnout girlie.
+    - Humor-as-coping: ADHD, dating disasters, work chaos, delusional confidence.
+    - Self-aware, feminine, messy, funny without trying too hard.
 
-    Write 1–2 short sentences that:
-    - Feel like a tiny story or mini-confession
-      (e.g., "Today’s episode featured me, anxiety, and three imaginary arguments.")
-    - Are snarky but not cruel; self-deprecating but still human and kind.
-    - Include exactly ONE emoji, placed at the end or near the end.
-    - Do NOT include hashtags or links.
-    - No line breaks; output must be a single paragraph.
-
-    Output JUST the caption text, nothing else.
+    Rules:
+    - 1–2 sentences.
+    - Slightly narrative, like a tiny story from Joanie’s day.
+    - Should feel like “receipts of my bad decisions” or “HR should not see this.”
+    - NO emojis. NO hashtags. NO inspirational vibes.
+    - Output ONLY the caption text in one paragraph.
     """
 
     return _generate_caption(system_prompt, base_prompt)
-

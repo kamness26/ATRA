@@ -1,10 +1,15 @@
+
 """
-Image Service – ATRA v1.9
-Fixes: brevity (headline-only), correct Atty (upside-down smile), safe margins (no crop).
+Image Service – ATRA v1.9 (Joanie Edition)
+Fixes: Switch from poster-style to Joanie’s flash-photo aesthetic, PNG → JPEG conversion.
 """
 
-import os, base64, random
+import os
+import base64
+import random
 from openai import OpenAI
+from PIL import Image
+from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -14,36 +19,59 @@ def generate_image(prompt: str) -> str:
     mode = random.choice(["core", "campaign"])
     print(f"🖤 Visual mode: {mode.upper()}")
 
+    # Joanie's palette still varies by mode
     palette = (
-        "Colors: pure black & white only."
+        "Color mood: harsh black & white with high contrast flash."
         if mode == "core" else
-        "Colors: mustard yellow, warm beige, and black only."
+        "Color mood: muted beige, mustard yellow accents, strong flash aesthetic."
     )
 
+    # === NEW JOANIE VISUAL PROMPT ===
     visual_prompt = f"""
-    Create a clean poster-style graphic for the journal 'You Won’t Believe This $H!T'.
+    Create a chaotic, flash-photography Gen Z/Millennial image inspired by “Joanie” —
+    a functional-chaotic corporate girlie who survives on iced coffee, overthinking,
+    ADHD brain dumps, romantic delusion, and funny self-awareness.
 
-    TEXT RULES (strict):
-    - Use ONE short headline only (8–12 words max) derived from: "{prompt}"
-    - No paragraphs, no small body copy, no bullets.
-    - Optional tiny kicker (2–5 words) is allowed, but keep it minimal.
+    AESTHETIC (strict):
+    - Hard flash photography in low-light (phone-flash energy).
+    - Realistic, candid, messy, unpolished.
+    - High contrast, strong shadows, sharp flash reflections.
+    - Must feel like a “life spill”: Joanie dumped her tote bag and this is the scene.
 
-    BRAND RULES (strict):
-    - Include Atty: an upside-down SMILEY FACE (smiling, not frowning). Orientation must be inverted.
-    - Atty can be bold (hero) or subtle (watermark), but must be visible.
-    - No cartoons/mascots/people/animals; no book illustration.
-    - Typography: bold sans-serif or distressed print; high legibility.
+    PROPS (allowed, choose any):
+    - Iced coffee cup, messy receipts, AirPods/headphones tangled,
+      lip gloss, subway card, a pen, corporate keycard, sticky notes,
+      hydro flask, mascara, tote bag, half-finished martini,
+      scribbled notebook doodles.
 
-    LAYOUT / CROPPING (strict):
-    - Keep a consistent safe area: at least 8% padding on ALL sides.
-    - Do NOT crop text or Atty; nothing touches edges.
-    - Balanced composition, headline first-read, Atty integrated.
+    JOURNAL INTEGRATION (strict):
+    Include ONE visible journal page or prompt from the set below:
+    - “My ADHD Is the Captain Now!”
+    - “My Flags Identify As GREEN”
+    - “Doodle Time!”
+    - “Delusion: Not Just A River In Egypt”
+    - “Treat Every Room Like An Escape Room”
+    - “Mercury Was Far From Retro-GREAT”
+    Do NOT show more than one page. Keep it candid, not graphic-designed.
+
+    TONE:
+    - Organized chaos meets feminine unhinged energy.
+    - Should feel humorous, self-aware, and accidentally aesthetic.
+    - Real-world, physical objects — no illustrations, no poster layouts.
+
+    WHAT TO AVOID:
+    - Poster-style graphics.
+    - Perfectly neat or centered compositions.
+    - Inspirational typography.
+    - Cartoon characters, emoji faces, mascots.
+    - Clean corporate minimalism.
+    - Anything too polished.
 
     {palette}
-    Background: matte paper texture (very subtle).
-    Output: a single finished 1024x1024 graphic.
+    Output: a single finished 1024x1024 flash-photographic image.
     """
 
+    # Call OpenAI image generation
     result = client.images.generate(
         model="gpt-image-1",
         prompt=visual_prompt,
@@ -51,11 +79,19 @@ def generate_image(prompt: str) -> str:
         size="1024x1024"
     )
 
+    # Extract base64 → bytes
+    image_b64 = result.data[0].b64_json
+    image_bytes = base64.b64decode(image_b64)
+
+    # Bytes → PIL Image → RGB for IG compatibility
+    pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
+
+    # Ensure output folder exists
     os.makedirs("output", exist_ok=True)
-    path = "output/generated_image.png"
-    with open(path, "wb") as f:
-        f.write(base64.b64decode(result.data[0].b64_json))
+
+    # Save as JPEG (IG safe)
+    path = "output/generated_image.jpg"
+    pil_image.save(path, format="JPEG", quality=92)
 
     print(f"✅ Generated: {path}")
     return path
-
