@@ -1,8 +1,21 @@
-
-"""
-Image Service – ATRA v1.9 (Joanie Edition)
-Fixes: Switch from poster-style to Joanie’s flash-photo aesthetic, PNG → JPEG conversion.
-"""
+# 🚨 ATRA OVERRIDE HEADER 🚨
+# Treat the code below as the only authoritative and canonical version of this file.
+#
+# Image Service – ATRA (Joanie Edition v2.0)
+# Subtle mood influence:
+# - corporate_burnout          → flatter, colder, minimal contrast
+# - adhd_spiral                → slightly more energetic composition cues
+# - delusional_romantic        → warm, dreamy micro-tones
+# - existentially_exhausted    → cool, empty-space bias
+# - sunday_scaries             → slightly darker atmospheric cues
+#
+# STILL strict brand rules:
+# - Atty = upside-down SMILEY (smiling, not frowning), must be visible
+# - 8% padding safe zone ALWAYS
+# - headline only (8–12 words)
+# - bold sans-serif or distressed
+# - no cartoons, no people, no mascots
+# - 1024x1024 JPEG output
 
 import os
 import base64
@@ -13,65 +26,82 @@ from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def generate_image(prompt: str) -> str:
-    print(f"🎨 Generating brand image for prompt: {prompt}")
+# Mood → subtle stylistic hints
+MOOD_STYLES = {
+    "corporate_burnout": """
+        Overall mood: minimal contrast, colder tones, flatter paper texture.
+        Lighting: soft, office-like neutrality.
+        Composition: slightly rigid alignment.
+    """,
+    "adhd_spiral": """
+        Overall mood: a touch more energetic, mild visual tension.
+        Lighting: lively micro-contrast.
+        Composition: slightly dynamic, but still clean and readable.
+    """,
+    "delusional_romantic": """
+        Overall mood: subtle warmth, delicate dreamy undertone.
+        Lighting: soft, warm highlights.
+        Composition: gentle curves, softer spatial balance.
+    """,
+    "existentially_exhausted": """
+        Overall mood: cooler palette bias, emptier negative space.
+        Lighting: muted, slightly dim.
+        Composition: sparse, minimal, slightly distant.
+    """,
+    "sunday_scaries": """
+        Overall mood: mild darkness, heavier shadows.
+        Lighting: soft vignette energy.
+        Composition: grounded, still, slightly heavy at the bottom.
+    """,
+}
 
-    mode = random.choice(["core", "campaign"])
-    print(f"🖤 Visual mode: {mode.upper()}")
 
-    # Joanie's palette still varies by mode
-    palette = (
-        "Color mood: harsh black & white with high contrast flash."
-        if mode == "core" else
-        "Color mood: muted beige, mustard yellow accents, strong flash aesthetic."
+def generate_image(prompt: str, mode: str) -> str:
+    print(f"🎨 Generating Joanie image ({mode}) for prompt: {prompt}")
+
+    # core vs campaign mode still alive
+    palette_mode = random.choice(["core", "campaign"])
+    print(f"🖤 Visual palette: {palette_mode.upper()}")
+
+    palette_rules = (
+        "Colors: pure black & white only."
+        if palette_mode == "core" else
+        "Colors: mustard yellow, warm beige, and black only."
     )
 
-    # === NEW JOANIE VISUAL PROMPT ===
+    mood_style = MOOD_STYLES[mode]
+
     visual_prompt = f"""
-    Create a chaotic, flash-photography Gen Z/Millennial image inspired by “Joanie” —
-    a functional-chaotic corporate girlie who survives on iced coffee, overthinking,
-    ADHD brain dumps, romantic delusion, and funny self-awareness.
+    Create a clean poster-style graphic for the journal 'You Won’t Believe This $H!T'.
 
-    AESTHETIC (strict):
-    - Hard flash photography in low-light (phone-flash energy).
-    - Realistic, candid, messy, unpolished.
-    - High contrast, strong shadows, sharp flash reflections.
-    - Must feel like a “life spill”: Joanie dumped her tote bag and this is the scene.
+    TEXT RULES:
+    - Use ONE short headline only (8–12 words) derived from: "{prompt}"
+    - No paragraphs, no secondary text, no tiny copy.
+    - Typography: bold sans-serif or distressed; high legibility.
 
-    PROPS (allowed, choose any):
-    - Iced coffee cup, messy receipts, AirPods/headphones tangled,
-      lip gloss, subway card, a pen, corporate keycard, sticky notes,
-      hydro flask, mascara, tote bag, half-finished martini,
-      scribbled notebook doodles.
+    BRAND RULES:
+    - Include Atty: an upside-down SMILEY FACE (smiling). Orientation must be inverted.
+    - Atty may be hero or watermark but must be present.
+    - No people, mascots, cartoons, illustrations of characters.
 
-    JOURNAL INTEGRATION (strict):
-    Include ONE visible journal page or prompt from the set below:
-    - “My ADHD Is the Captain Now!”
-    - “My Flags Identify As GREEN”
-    - “Doodle Time!”
-    - “Delusion: Not Just A River In Egypt”
-    - “Treat Every Room Like An Escape Room”
-    - “Mercury Was Far From Retro-GREAT”
-    Do NOT show more than one page. Keep it candid, not graphic-designed.
+    LAYOUT / CROPPING:
+    - Keep 8% padding on ALL sides.
+    - Nothing may touch the edges.
+    - Main text must never be cropped.
+    - Balanced, modern composition.
 
-    TONE:
-    - Organized chaos meets feminine unhinged energy.
-    - Should feel humorous, self-aware, and accidentally aesthetic.
-    - Real-world, physical objects — no illustrations, no poster layouts.
+    {palette_rules}
 
-    WHAT TO AVOID:
-    - Poster-style graphics.
-    - Perfectly neat or centered compositions.
-    - Inspirational typography.
-    - Cartoon characters, emoji faces, mascots.
-    - Clean corporate minimalism.
-    - Anything too polished.
+    MOOD INFLUENCE (subtle):
+    {mood_style}
 
-    {palette}
-    Output: a single finished 1024x1024 flash-photographic image.
+    Background: matte paper texture (very subtle).
+    Output: square 1024x1024 image, photorealistic poster aesthetic.
+
+    Respond ONLY with a finished image.
     """
 
-    # Call OpenAI image generation
+    # --- OpenAI Image Call ---
     result = client.images.generate(
         model="gpt-image-1",
         prompt=visual_prompt,
@@ -79,18 +109,16 @@ def generate_image(prompt: str) -> str:
         size="1024x1024"
     )
 
-    # Extract base64 → bytes
+    # Decode base64 → PIL Image
     image_b64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_b64)
-
-    # Bytes → PIL Image → RGB for IG compatibility
     pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
-    # Ensure output folder exists
+    # Output directory
     os.makedirs("output", exist_ok=True)
-
-    # Save as JPEG (IG safe)
     path = "output/generated_image.jpg"
+
+    # Save JPEG (IG safe)
     pil_image.save(path, format="JPEG", quality=92)
 
     print(f"✅ Generated: {path}")
