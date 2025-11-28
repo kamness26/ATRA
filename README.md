@@ -1,91 +1,106 @@
-# ATRA — Automated Thought-to-Reality Accelerator  
+# **ATRA — Automated Thought-to-Reality Accelerator**
 *(Pronounced: **AHT-rah**)*
 
-### Multi-service advertising engine that automates everything from AI-driven content creation to cross-platform posting and data-based strategy optimization.
+### **Multi-service advertising engine automating everything from AI-driven content creation to cross-platform posting and data-based strategy optimization.**
 
 ATRA is an end-to-end automation system that generates, designs, uploads, logs, and distributes branded content with zero manual intervention.  
-Built originally for the social ecosystem of **“You Won’t Believe This $H!T,”** ATRA is now a scalable creative + advertising pipeline.
+Originally built for **“You Won’t Believe This $H!T”**, ATRA now functions as a scalable creative + advertising pipeline.
 
 ---
 
-# 🚀 Current Capabilities (ATRA v1.1)
+# 🚀 **Current Capabilities — ATRA v1.3**
 
 ## **1. AI-Driven Prompt & Caption Generation**
-- Witty, high-engagement micro-prompts  
-- Platform-specific captions (IG + FB)  
-- Tone-consistent, brand-accurate writing  
+- Generates witty, high-engagement micro-prompts.  
+- Produces platform-specific captions for IG + FB.  
+- Fully tone-consistent with the brand voice.
+
+### **Joanie Personality Engine (v1.3)**
+ATRA now chooses from 5 personality modes:
+- **corporate_burnout**
+- **adhd_spiral**
+- **delusional_romantic**
+- **existentially_exhausted**
+- **sunday_scaries**
+
+Each affects:
+- Prompt style  
+- Caption tone  
+- Image headline direction  
+
+ATRA also stores historical mode usage for future analytics.
 
 ---
 
 ## **2. Brand-Accurate AI Image Generation**
-Using GPT-Image-1, ATRA produces 1024×1024 poster-style graphics that obey strict brand rules:
+ATRA uses GPT-Image-1 to create 1024×1024 poster-style graphics that follow strict rules:
 
-- One short headline (**8–12 words**)  
-- Mandatory upside-down smiling **Atty**  
-- **8%+** safe margins  
-- Minimal color systems (core or campaign)  
-- No people, mascots, clip art, or body text  
+- One bold headline (8–12 words)  
+- Mandatory upside-down smiling **Atty** icon  
+- 8%+ safe margins  
+- Minimalist color palette  
+- No people, mascots, clip art, or dense body text  
 
 ---
 
 ## **3. Cloudinary Hosting**
-- Raw, untransformed asset upload  
-- Stable CDN URL for IG/FB  
-- Fully compatible with media validators  
+- Raw file upload (no transforms)  
+- Stable CDN URLs  
+- Works with IG/FB media validators  
+- Enables clean, consistent logging + reuse  
 
 ---
 
 ## **4. Google Sheets Logging**
-Each run writes:
-
+Every run logs:
 - Prompt  
 - IG caption  
 - FB caption  
 - Image URL  
 - Timestamp  
+- (v1.3+) Joanie mode used  
 
-Creates a real-time content ledger + posting audit trail.
+Creates a live, searchable ledger of all published content.
 
 ---
 
-## **5. Cross-Platform Distribution**
-ATRA sends one unified payload to Make.com:
+## **5. Cross-Platform Distribution (IG + FB)**
+ATRA sends a unified payload to Make.com:
 
 ig_caption
 fb_caption
 image_url
 timestamp
+joanie_mode
 
 
-Make.com handles:
-
+Make.com performs:
 - Instagram Business posting  
 - Facebook Page posting  
 
-Fully automated in a single webhook call.
+All automated from a single webhook.
 
 ---
 
-## **6. Reliability Layer**
+## **6. Reliability & Error-Handling Layer**
 - CDN propagation delay handling  
-- Exponential backoff  
-- Request retries  
-- Structured error logging  
+- Multi-step exponential backoff  
+- Retry protection  
+- Structured error logs for debugging  
 
 ---
 
 ## **7. Automated Scheduling via GitHub Actions**
 ATRA can run:
+- Daily  
+- On-demand  
+- Locally for debugging  
 
-- On a daily schedule  
-- On-demand via GitHub  
-- Locally for rapid testing  
-
-A fully hands-off publishing engine.
+This enables a fully autonomous content pipeline.
 
 ---
 
-# 🧩 Architecture Overview
+# 🧩 **Architecture Overview**
 
 ATRA (Local or GitHub Actions)
 |
@@ -93,7 +108,10 @@ v
 Prompt Service (GPT)
 |
 v
-Image Service (DALL·E)
+Joanie Personality Engine
+|
+v
+Image Service (GPT-Image-1)
 |
 v
 Upload Service (Cloudinary)
@@ -110,71 +128,72 @@ Instagram Business Facebook Page
 
 ---
 
-# 📅 Feature Matrix
+# 📅 **Feature Matrix**
 
-| Component                      | Description                         | Status      |
-|-------------------------------|-------------------------------------|-------------|
-| AI prompt + caption generation | Platform-aware, on-brand            | **LIVE**    |
-| AI image generation            | Atty rules + layout system          | **LIVE**    |
-| Cloudinary upload              | Raw asset hosting                   | **LIVE**    |
-| Google Sheets logging          | Post ledger                         | **LIVE**    |
-| IG + FB posting                | Unified webhook payload             | **LIVE**    |
-| Retry/backoff                  | Reliable delivery                   | **LIVE**    |
-| Scheduled automation           | GitHub Actions                      | **LIVE**    |
-| Analytics ingestion            | IG/FB Insights, KDP                 | **PLANNED** |
-| Sales correlation              | Content → sales mapping             | **PLANNED** |
-| Data optimization engine       | Layout/tone/palette tuning          | **PLANNED** |
-| Autonomous A/B testing         | Caption + headline experiments      | **PLANNED** |
-| Posting-time optimization      | Predictive scheduling               | **PLANNED** |
-| Sora video generation          | Multi-format expansion              | **PLANNED** |
-| Agentic creative director      | Campaign-level decision-making      | **PLANNED** |
+| Component                        | Description                               | Status     |
+|--------------------------------|-------------------------------------------|------------|
+| Prompt generation              | On-brand, platform-aware                  | **LIVE**   |
+| Caption generation             | IG/FB optimized                           | **LIVE**   |
+| Joanie personality engine      | 5-mode tone system                        | **LIVE**   |
+| AI image generation            | Atty + layout system                      | **LIVE**   |
+| Cloudinary upload              | Raw asset hosting                         | **LIVE**   |
+| Google Sheets logging          | Full post ledger                          | **LIVE**   |
+| IG + FB posting                | Unified webhook payload                   | **LIVE**   |
+| Retry/backoff layer            | High reliability                          | **LIVE**   |
+| GitHub Actions automation      | Daily + manual triggers                   | **LIVE**   |
+| Analytics ingestion            | IG/FB Insights, KDP                       | **PLANNED**|
+| Sales correlation engine       | Content → sales mapping                   | **PLANNED**|
+| Optimization engine            | Layout/tone/palette tuning                | **PLANNED**|
+| Autonomous A/B testing         | Captions + headline experiments           | **PLANNED**|
+| Predictive posting scheduler   | Performance-based timing                  | **PLANNED**|
+| Sora video generation          | Multi-format expansion                    | **PLANNED**|
+| Creative director agent        | Campaign-level decision-making            | **PLANNED**|
 
 ---
 
-# 🔮 Roadmap: Toward Full Closed-Loop Optimization
+# 🔮 **Roadmap — Toward Closed-Loop Optimization**
 
-## 🟦 Phase 2 — Analytics Ingestion
+## 🟦 **Phase 2 — Analytics Ingestion**
 - IG Insights  
-- FB performance  
+- Facebook performance metrics  
 - Amazon KDP sales  
-- Attribution tracking  
+- Attribution modeling  
 
-## 🟧 Phase 3 — Data-Based Optimization
-ATRA will automatically:
-- Tune tone, length, palette, layout  
+## 🟧 **Phase 3 — Data-Based Optimization**
+ATRA will:
+- Automatically adjust tone, palette, pacing  
 - Prefer high-performing patterns  
 - Retire low performers  
-- Build memory of what works  
+- Build a memory of what works  
 
-## 🟩 Phase 4 — Intelligent Scheduling
-- Predictive posting times  
-- Auto-calendar creation  
-- 7–30 day content pipelines  
+## 🟩 **Phase 4 — Intelligent Scheduling**
+- Predicts high-engagement posting times  
+- Auto-generates a 7–30 day calendar  
+- Learns seasonal + behavioral patterns  
 
-## 🟥 Phase 5 — Autonomous Creative Director
+## 🟥 **Phase 5 — Autonomous Creative Director**
 - Defines campaign themes  
-- Designs storytelling arcs  
-- Generates Sora video variants  
+- Creates story arcs  
+- Generates Sora video content  
 - Controls pacing + variation  
 
-## 🟪 Phase 6 — Closed-Loop Self-Optimizing System
+## 🟪 **Phase 6 — Closed-Loop Self-Optimizing System**
 - Pulls metrics  
 - Generates hypotheses  
 - Runs A/B tests  
-- Evolves the system automatically  
+- Evolves the campaign automatically  
 
 ---
 
-# 🏁 Status
-
-ATRA v1.1 is **fully operational**.  
-Multi-platform posting is stable.  
-Next milestone: **analytics ingestion + Joanie-based optimization intelligence**.
+# 🏁 **Status**
+ATRA v1.3 is fully operational.  
+Joanie personality engine is live.  
+IG + FB posting pipeline is stable.  
+Next major milestone: **analytics ingestion + early optimization logic**.
 
 ---
 
-# 🫡 Credits
-
+# 🫡 **Credits**
 Built by **Kam (with a K)**.  
 Engineered to turn chaos into content — automatically.  
 Powered by OpenAI, Cloudinary, Google Sheets, Make.com, and GitHub Actions.
