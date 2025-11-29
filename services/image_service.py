@@ -1,114 +1,139 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
-# Treat the code below as the ONLY authoritative and canonical version of this file.
+# Treat this file as the ONLY canonical version of services/image_service.py.
 #
-# Image Service – ATRA (Joanie Edition v3.0 – Cinematic Photorealism)
+# Image Service – ATRA (Joanie Photoreal Edition v3.0)
 #
-# NEW RULES (Dec 2025):
-# - NO Atty
-# - NO posters, NO typographic layouts
-# - NO padding rules
-# - NO graphic-design constraints
-# - CINEMATIC PHOTO-REAL IMAGERY ONLY
-# - Emotive, atmospheric, relatable, scroll-stopping
+# PURPOSE:
+#   Generate photorealistic Joanie-centered images that reflect her mood modes.
+#   These are cinematic, lifestyle, photojournalistic, emotionally grounded images.
 #
-# Joanie visual themes (per mode):
-# - corporate_burnout          → cold office light, fatigue realism
-# - adhd_spiral                → colorful clutter, motion/energy
-# - delusional_romantic        → warm dreamy haze, emotional softness
-# - existentially_exhausted    → dim, cool, introspective isolation
-# - sunday_scaries             → nighttime quiet anxiety, warm lamp glow
+# RULES:
+#   - NO posters
+#   - NO headlines
+#   - NO graphic design elements
+#   - NO Atty
+#   - NO text on the image
+#   - NO illustrations, cartoons, or character drawings
+#   - MUST be photorealistic and cinematic, 1024x1024
 #
-# Each image:
-# - Photo-realistic (not illustration)
-# - Cinematic lighting, shallow depth-of-field, A24 vibe
-# - Joanie may appear fully, partially, or implied through framing
-# - Never identical, always same archetype
-# - 1024x1024 JPG output for IG compatibility
+# Joanie is never shown as a face-forward portrait.
+# She is represented through:
+#   - environments
+#   - objects
+#   - hands
+#   - over-the-shoulder shots
+#   - POV shots
+#   - silhouettes
+#   - emotional spaces that imply her presence
+#
+# Mood → Photoreal direction
+
 
 import os
 import base64
-from openai import OpenAI
-from PIL import Image
 from io import BytesIO
-from datetime import datetime
+from PIL import Image
+from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Cinematic mode styles
-JOANIE_MODES = {
+
+MOOD_TO_PHOTOREAL_STYLE = {
     "corporate_burnout": """
-        Cinematic photorealism. Cold office lighting. Soft blue-grey palette.
-        Tired eyes, slumped posture, emotional realism.
-        Subtle computer monitor glow, messy desk, shallow depth-of-field.
+        A lonely desk at night, cold office lighting,
+        half-drunk coffee, laptop glow, shadows of paperwork,
+        muted colors, slight blue cast, exhaustion in the air.
+        Cinematic, moody, shallow depth of field.
     """,
+
     "adhd_spiral": """
-        Photorealistic lifestyle chaos. Colorful clutter, motion blur,
-        lived-in apartment, intense natural window light.
-        Slight surreal bloom around highlights. Emotional energy, realism.
+        Chaotic desk energy: scattered notes, open tabs on screens,
+        colorful pens, half-finished snacks, motion blur hints,
+        vibrant micro-details, tactile close-up textures.
+        Energetic but still aesthetically composed.
     """,
+
     "delusional_romantic": """
-        Warm cinematic golden-hour lighting. Soft haze, dreamy bloom,
-        wistful expression, elegant close-ups.
-        Romantic tones with emotional intimacy. A24-like visual softness.
+        Warm cinematic lighting, soft bokeh, a cozy bed or couch,
+        journal open next to candles or soft fairy lights,
+        dreamy golden undertones, hints of longing in the space.
+        Slight haze or film softness.
     """,
+
     "existentially_exhausted": """
-        Dim room. Cool, shadow-heavy palette. Moody introspective lighting.
-        Emotional weight, quiet isolation, heavy negative space.
-        Photorealistic realism with soft vignette.
+        Empty room, cool lighting, soft gray palette,
+        a journal sitting open on a table with nothing written,
+        wide negative space, slightly desaturated,
+        atmospheric loneliness. Quiet, still, cinematic.
     """,
+
     "sunday_scaries": """
-        Nighttime interior. Warm lamp against cool ambient darkness.
-        Emotional tension, quiet loneliness, gentle highlights.
-        Realistic textures, cinematic close framing.
+        Dim early-evening apartment scene, unwashed mug,
+        cozy-yet-anxious Sunday atmosphere, TV glow, socks on couch,
+        slightly darker shadows, warm-to-cool mixed lighting.
+        Subtle tension without chaos.
     """,
 }
 
-# Core Joanie archetype (flexible but recognizable)
-JOANIE_ARCHETYPE = """
-Young woman (mid-20s to early-30s), expressive face, messy hair, tired beauty,
-realistic skin texture, soft features, modern clothing, emotionally present.
-"""
-
 
 def generate_image(prompt: str, mode: str) -> str:
-    print(f"🎨 Generating cinematic Joanie image ({mode})")
+    print(f"🎨 Generating photoreal Joanie image for mode={mode}")
 
-    style_block = JOANIE_MODES.get(mode, JOANIE_MODES["existentially_exhausted"])
+    photoreal_style = MOOD_TO_PHOTOREAL_STYLE[mode]
 
-    full_prompt = f"""
-    Create a cinematic, photo-realistic image inspired by this journaling prompt:
+    visual_prompt = f"""
+    Create a **photorealistic cinematic 1024x1024 image**.
 
-        "{prompt}"
+    NOT ALLOWED:
+    - No posters
+    - No text
+    - No Atty
+    - No illustrations, drawings, cartoons, or clip art
+    - No people shown fully or face-forward
+    - No visible characters looking at camera
 
-    Requirements:
-    - Use the Joanie archetype: {JOANIE_ARCHETYPE}
-    - Emphasize the emotional tone of: {style_block}
-    - NO text. NO typography. NO graphic elements. NO icons. NO posters.
-    - Natural real-world setting (apartment, street, coffee shop, office, etc.)
-    - A24-style film lighting and composition.
-    - Soft bloom, shallow depth-of-field, emotional realism.
-    - Color palette guided by the mode.
-    - IG-friendly, scroll-stopping, authentic, human.
-    - 1024x1024 output, photo-real.
+    ALLOWED:
+    - Over-the-shoulder shots
+    - POV shots
+    - Silhouettes
+    - Hands
+    - Environments that imply Joanie’s presence
+    - Everyday emotional objects
+
+    STYLE REQUIREMENTS:
+    - Cinematic lighting
+    - Real camera depth of field
+    - Realistic textures
+    - Filmic color grading
+    - Rich shadows and highlights
+    - Photojournalistic or lifestyle feel
+
+    MOOD SPECIFIC:
+    {photoreal_style}
+
+    PROMPT INFLUENCE:
+    The scene should subtly reflect this journaling theme:
+    "{prompt}"
+
+    Deliver ONLY a finished image.
     """
 
     result = client.images.generate(
         model="gpt-image-1",
-        prompt=full_prompt.strip(),
-        size="1024x1024"
+        prompt=visual_prompt,
+        size="1024x1024",
+        n=1
     )
 
+    # Decode base64 → image
     image_b64 = result.data[0].b64_json
-    image_bytes = base64.b64decode(image_b64)
+    img_bytes = base64.b64decode(image_b64)
+    pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
 
-    pil_img = Image.open(BytesIO(image_bytes)).convert("RGB")
-
+    # Save output
     os.makedirs("output", exist_ok=True)
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    path = f"output/joanie_cinematic_{mode}_{timestamp}.jpg"
-
+    path = "output/generated_image.jpg"
     pil_img.save(path, format="JPEG", quality=92)
 
-    print(f"✅ Saved cinematic Joanie image: {path}")
+    print(f"✅ Generated photoreal image: {path}")
     return path
