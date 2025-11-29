@@ -1,104 +1,103 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
 #
-# Image Service – ATRA (Joanie Edition v2.2 – Warm Chaos)
+# Image Service – ATRA (Photorealistic Flat-Lay Edition v3.0)
 #
-# Updated to remove depressing / dark tones:
-# - NO heavy shadows
-# - NO gray, cold, empty spaces
-# - NO bleakness or sterile minimalism
+# New direction:
+# - No posters, no graphics, no Atty
+# - 100% photorealistic editorial flat-lay photography
+# - Warm, cinematic, directional lighting (not depressing)
+# - Moody but cozy, relatable, lived-in chaos
+# - Journal is ALWAYS present (open or closed)
+# - Objects arranged like a real busy life: work badge, pen, lipstick, iced coffee,
+#   keys, headphones, sticky notes, receipts, tote bag, water bottle, laptop corner, etc.
+# - Joanie’s “modes” appear subtly through the chaos, NOT through darkness.
 #
-# New aesthetic target:
-# - Warm, cozy, lived-in chaos
-# - Golden-hour lighting, natural light, soft highlights
-# - Real-life clutter (keys, notebooks, bags, coffee cups, headphones, receipts)
-# - Scenes that look human, relatable, funny in their messiness
-# - A snapshot of everyday life, not sad or lonely
-#
-# Modes still influence subtle flavor, but stay warm:
-#   corporate_burnout        → warm office clutter, cozy desk chaos
-#   adhd_spiral              → energetic but bright & playful clutter
-#   delusional_romantic      → dreamy warm tones, soft highlights
-#   existentially_exhausted  → gentle, quiet, but still warm & lived-in
-#   sunday_scaries           → warm late-night or warm-lamp lighting, never dark
-#
-# Still outputs photorealistic 1024x1024 JPEG images.
+# Output: 1024×1024 JPEG, photorealistic overhead shot.
 
 import os
 import base64
-import random
 from openai import OpenAI
 from PIL import Image
 from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# -------------------------------------------------
-# Mood → Warm Chaos Variations
-# -------------------------------------------------
-
-MOOD_STYLES = {
+# ---------------------------------------
+# Joanie mood cues → influences object choices & lighting
+# ---------------------------------------
+MOOD_OBJECTS = {
     "corporate_burnout": """
-        Warm, cozy desk chaos. Soft golden light hitting paperwork, half-finished coffee,
-        sticky notes, pens everywhere. Busy energy but comforting, not stressful.
-        Vibrant warm neutrals. Nothing cold, dim, or bleak.
+        Include items like: laptop corner, dead highlighter, cold coffee,
+        work badge, half-used sticky notes, receipts, simple jewelry.
+        Lighting: warm desk-lamp glow, not harsh, not sad.
     """,
+
     "adhd_spiral": """
-        Bright, lively clutter. Open books, scattered objects, colorful notes, headphones,
-        half-zipped bags, keys tossed, sunlight streaks. Energetic but fun, not overwhelming.
-        Warm tones only. Zero darkness.
+        Include items like: tangled earbuds, scattered pens,
+        half-open lipstick, multiple notes, keys slightly out of frame.
+        Lighting: energetic pockets of brightness without chaos in shadows.
     """,
+
     "delusional_romantic": """
-        Dreamy warm aesthetic. Soft-focus golden lighting, flowers, open journal, cozy fabrics,
-        sentimental clutter, little romantic touches. Whimsical, hopeful, warm.
-        No gloom, no shadows.
+        Include items like: soft lipstick, a small flower, heart doodle,
+        warm coffee, gentle note scribbles.
+        Lighting: warm, dreamy highlights without softness in focus.
     """,
+
     "existentially_exhausted": """
-        Still warm, just quieter. Soft lamp glow on scattered blankets, open laptop,
-        pillows, notes, coffee mug. Lived-in, gentle chaos — never empty, bleak, or dim.
-        Golden, amber, or soft daylight only.
+        Include items like: water bottle, minimal clutter, clean pen,
+        simple sticky note or blank page.
+        Lighting: cooler but still warm enough to avoid sadness — balanced cinematic.
     """,
+
     "sunday_scaries": """
-        Warm-lamp evening chaos. Couch or bed with cozy clutter—hoodie, snacks, journal,
-        soft blanket, dim-but-warm ambient lighting. Slight anticipation energy but NEVER
-        dark, cold, or heavy. Soft oranges + warm neutrals.
+        Include items like: iced coffee, crumpled receipt, keys,
+        tote bag corner, work badge peeking out.
+        Lighting: warm directional light, slight vignette, NOT dark.
     """,
 }
 
-# -------------------------------------------------
-# Image Generator
-# -------------------------------------------------
 
 def generate_image(prompt: str, mode: str) -> str:
-    print(f"🎨 Generating Joanie warm-chaos image ({mode}) for prompt: {prompt}")
+    print(f"🎨 Generating flat-lay Joanie image ({mode}) for prompt: {prompt}")
 
-    mood_style = MOOD_STYLES[mode]
+    mood_influence = MOOD_OBJECTS.get(mode, "")
 
     visual_prompt = f"""
-    Create a cozy, warm, photorealistic snapshot of everyday life chaos.
+    Create a photorealistic editorial flat-lay photograph shot from a perfect
+    overhead perspective. The scene should feel warm, cinematic, and full
+    of relatable, lived-in chaos — but NEVER depressing.
+
+    REQUIRED ELEMENTS:
+    - A journal at the center (open with handwriting inspired by: "{prompt}"
+      OR closed showing a textured cover).
+    - A pen resting naturally near or across the journal.
+    - Everyday items arranged like they were just used:
+      keys, earbuds, lipstick, sticky notes, receipts, iced coffee,
+      water bottle, tote bag, laptop corner, camera, etc.
+    - Dark wooden desk surface with rich grain and subtle texture.
+    - Cinematic directional lighting casting defined but warm shadows.
+
+    COLOR PALETTE:
+    - Muted earth tones: deep browns, blacks, tan, olive, beige.
+    - Metallic pen elements allowed.
+    - Absolutely no neon or harsh color pops.
 
     STYLE:
-    - Warm tones ONLY: golden hour light, soft lamp glow, natural sunlight.
-    - Zero darkness, zero heavy shadows, zero bleakness.
-    - Cozy, relatable clutter: keys, notebooks, open bags, receipts, pens,
-      coffee cups, sweaters, books, blankets, tech gadgets.
-    - Scene should feel lived-in, human, warm, and emotionally safe.
-    - No people visible.
+    - High-contrast but warm.
+    - Editorial magazine aesthetic.
+    - Chaotic in a human, funny, relatable way — not sad.
+    - No illustrations, no poster graphics, no drawn elements.
+    - 100% real-world camera realism.
+    - Depth preserved through shadows and object texture.
 
-    MOOD INFLUENCE:
-    {mood_style}
+    MOOD INFLUENCE BASED ON JOANIE MODE:
+    {mood_influence}
 
-    PROMPT INSPIRATION:
-    - The mood should subtly echo: "{prompt}"
-    - But DO NOT include text, quotes, posters, or writing on walls.
-    - No Atty symbol in this version.
-
-    OUTPUT REQUIREMENTS:
-    - Photorealistic.
-    - Square 1024x1024.
-    - Soft highlights, warm gradients, cozy shadows (never dark).
-    - High detail textures (fabric, paper, wood grain).
-    - Respond ONLY with the generated image.
+    Technical:
+    - Output a finished, cohesive 1024×1024 photorealistic image.
+    - Respond ONLY with an image.
     """
 
     # --- OpenAI Image Call ---
@@ -109,17 +108,15 @@ def generate_image(prompt: str, mode: str) -> str:
         size="1024x1024"
     )
 
-    # Decode base64 → PIL Image
+    # Decode → PIL
     image_b64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_b64)
     pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
-    # Output directory
+    # Save
     os.makedirs("output", exist_ok=True)
     path = "output/generated_image.jpg"
-
-    # Save JPEG (IG safe)
     pil_image.save(path, format="JPEG", quality=92)
 
-    print(f"✅ Generated warm-chaos image: {path}")
+    print(f"✅ Image generated at: {path}")
     return path
