@@ -1,139 +1,125 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
-# Treat this file as the ONLY canonical version of services/image_service.py.
+# Treat the code below as the only authoritative and canonical version of this file.
 #
-# Image Service – ATRA (Joanie Photoreal Edition v3.0)
+# Image Service – ATRA (Joanie Edition v2.2 – Warm Chaos)
 #
-# PURPOSE:
-#   Generate photorealistic Joanie-centered images that reflect her mood modes.
-#   These are cinematic, lifestyle, photojournalistic, emotionally grounded images.
+# Updated to remove depressing / dark tones:
+# - NO heavy shadows
+# - NO gray, cold, empty spaces
+# - NO bleakness or sterile minimalism
 #
-# RULES:
-#   - NO posters
-#   - NO headlines
-#   - NO graphic design elements
-#   - NO Atty
-#   - NO text on the image
-#   - NO illustrations, cartoons, or character drawings
-#   - MUST be photorealistic and cinematic, 1024x1024
+# New aesthetic target:
+# - Warm, cozy, lived-in chaos
+# - Golden-hour lighting, natural light, soft highlights
+# - Real-life clutter (keys, notebooks, bags, coffee cups, headphones, receipts)
+# - Scenes that look human, relatable, funny in their messiness
+# - A snapshot of everyday life, not sad or lonely
 #
-# Joanie is never shown as a face-forward portrait.
-# She is represented through:
-#   - environments
-#   - objects
-#   - hands
-#   - over-the-shoulder shots
-#   - POV shots
-#   - silhouettes
-#   - emotional spaces that imply her presence
+# Modes still influence subtle flavor, but stay warm:
+#   corporate_burnout        → warm office clutter, cozy desk chaos
+#   adhd_spiral              → energetic but bright & playful clutter
+#   delusional_romantic      → dreamy warm tones, soft highlights
+#   existentially_exhausted  → gentle, quiet, but still warm & lived-in
+#   sunday_scaries           → warm late-night or warm-lamp lighting, never dark
 #
-# Mood → Photoreal direction
-
+# Still outputs photorealistic 1024x1024 JPEG images.
 
 import os
 import base64
-from io import BytesIO
-from PIL import Image
+import random
 from openai import OpenAI
+from PIL import Image
+from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# -------------------------------------------------
+# Mood → Warm Chaos Variations
+# -------------------------------------------------
 
-MOOD_TO_PHOTOREAL_STYLE = {
+MOOD_STYLES = {
     "corporate_burnout": """
-        A lonely desk at night, cold office lighting,
-        half-drunk coffee, laptop glow, shadows of paperwork,
-        muted colors, slight blue cast, exhaustion in the air.
-        Cinematic, moody, shallow depth of field.
+        Warm, cozy desk chaos. Soft golden light hitting paperwork, half-finished coffee,
+        sticky notes, pens everywhere. Busy energy but comforting, not stressful.
+        Vibrant warm neutrals. Nothing cold, dim, or bleak.
     """,
-
     "adhd_spiral": """
-        Chaotic desk energy: scattered notes, open tabs on screens,
-        colorful pens, half-finished snacks, motion blur hints,
-        vibrant micro-details, tactile close-up textures.
-        Energetic but still aesthetically composed.
+        Bright, lively clutter. Open books, scattered objects, colorful notes, headphones,
+        half-zipped bags, keys tossed, sunlight streaks. Energetic but fun, not overwhelming.
+        Warm tones only. Zero darkness.
     """,
-
     "delusional_romantic": """
-        Warm cinematic lighting, soft bokeh, a cozy bed or couch,
-        journal open next to candles or soft fairy lights,
-        dreamy golden undertones, hints of longing in the space.
-        Slight haze or film softness.
+        Dreamy warm aesthetic. Soft-focus golden lighting, flowers, open journal, cozy fabrics,
+        sentimental clutter, little romantic touches. Whimsical, hopeful, warm.
+        No gloom, no shadows.
     """,
-
     "existentially_exhausted": """
-        Empty room, cool lighting, soft gray palette,
-        a journal sitting open on a table with nothing written,
-        wide negative space, slightly desaturated,
-        atmospheric loneliness. Quiet, still, cinematic.
+        Still warm, just quieter. Soft lamp glow on scattered blankets, open laptop,
+        pillows, notes, coffee mug. Lived-in, gentle chaos — never empty, bleak, or dim.
+        Golden, amber, or soft daylight only.
     """,
-
     "sunday_scaries": """
-        Dim early-evening apartment scene, unwashed mug,
-        cozy-yet-anxious Sunday atmosphere, TV glow, socks on couch,
-        slightly darker shadows, warm-to-cool mixed lighting.
-        Subtle tension without chaos.
+        Warm-lamp evening chaos. Couch or bed with cozy clutter—hoodie, snacks, journal,
+        soft blanket, dim-but-warm ambient lighting. Slight anticipation energy but NEVER
+        dark, cold, or heavy. Soft oranges + warm neutrals.
     """,
 }
 
+# -------------------------------------------------
+# Image Generator
+# -------------------------------------------------
 
 def generate_image(prompt: str, mode: str) -> str:
-    print(f"🎨 Generating photoreal Joanie image for mode={mode}")
+    print(f"🎨 Generating Joanie warm-chaos image ({mode}) for prompt: {prompt}")
 
-    photoreal_style = MOOD_TO_PHOTOREAL_STYLE[mode]
+    mood_style = MOOD_STYLES[mode]
 
     visual_prompt = f"""
-    Create a **photorealistic cinematic 1024x1024 image**.
+    Create a cozy, warm, photorealistic snapshot of everyday life chaos.
 
-    NOT ALLOWED:
-    - No posters
-    - No text
-    - No Atty
-    - No illustrations, drawings, cartoons, or clip art
-    - No people shown fully or face-forward
-    - No visible characters looking at camera
+    STYLE:
+    - Warm tones ONLY: golden hour light, soft lamp glow, natural sunlight.
+    - Zero darkness, zero heavy shadows, zero bleakness.
+    - Cozy, relatable clutter: keys, notebooks, open bags, receipts, pens,
+      coffee cups, sweaters, books, blankets, tech gadgets.
+    - Scene should feel lived-in, human, warm, and emotionally safe.
+    - No people visible.
 
-    ALLOWED:
-    - Over-the-shoulder shots
-    - POV shots
-    - Silhouettes
-    - Hands
-    - Environments that imply Joanie’s presence
-    - Everyday emotional objects
+    MOOD INFLUENCE:
+    {mood_style}
 
-    STYLE REQUIREMENTS:
-    - Cinematic lighting
-    - Real camera depth of field
-    - Realistic textures
-    - Filmic color grading
-    - Rich shadows and highlights
-    - Photojournalistic or lifestyle feel
+    PROMPT INSPIRATION:
+    - The mood should subtly echo: "{prompt}"
+    - But DO NOT include text, quotes, posters, or writing on walls.
+    - No Atty symbol in this version.
 
-    MOOD SPECIFIC:
-    {photoreal_style}
-
-    PROMPT INFLUENCE:
-    The scene should subtly reflect this journaling theme:
-    "{prompt}"
-
-    Deliver ONLY a finished image.
+    OUTPUT REQUIREMENTS:
+    - Photorealistic.
+    - Square 1024x1024.
+    - Soft highlights, warm gradients, cozy shadows (never dark).
+    - High detail textures (fabric, paper, wood grain).
+    - Respond ONLY with the generated image.
     """
 
+    # --- OpenAI Image Call ---
     result = client.images.generate(
         model="gpt-image-1",
         prompt=visual_prompt,
-        size="1024x1024",
-        n=1
+        n=1,
+        size="1024x1024"
     )
 
-    # Decode base64 → image
+    # Decode base64 → PIL Image
     image_b64 = result.data[0].b64_json
-    img_bytes = base64.b64decode(image_b64)
-    pil_img = Image.open(BytesIO(img_bytes)).convert("RGB")
+    image_bytes = base64.b64decode(image_b64)
+    pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
-    # Save output
+    # Output directory
     os.makedirs("output", exist_ok=True)
     path = "output/generated_image.jpg"
-    pil_img.save(path, format="JPEG", quality=92)
 
-    print(f"✅ Generated photoreal image: {path}")
+    # Save JPEG (IG safe)
+    pil_image.save(path, format="JPEG", quality=92)
+
+    print(f"✅ Generated warm-chaos image: {path}")
     return path

@@ -1,10 +1,10 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
-# Caption Service – ATRA (Joanie Edition v2.1)
+# Caption Service – ATRA (Joanie Edition v2.2 – Warm Chaos IG)
 #
 # Joanie personality rules:
-# - IG captions → punchy, witty, lightly mood-tinted
-# - FB captions → mini-narrative, warmer, mood-influenced
+# - IG captions → warm, witty, lightly chaotic, never depressing
+# - FB captions → unchanged (mini-narrative, mood-influenced)
 #
 # Explicit modes:
 #   corporate_burnout, sunday_scaries
@@ -12,7 +12,7 @@
 #   adhd_spiral, delusional_romantic, existentially_exhausted
 #
 # NOTE:
-# This version fully restores Facebook caption generation for ATRA v1.3.
+# FB functionality remains fully intact from v2.1.
 
 import os
 from openai import OpenAI
@@ -56,41 +56,51 @@ def _generate_caption(system_prompt: str, base_prompt: str, mode: str) -> str:
     return caption.replace("\n", " ").strip()
 
 # -------------------------------------------------
-# INSTAGRAM CAPTIONS
+# INSTAGRAM CAPTIONS (UPDATED — Warm Chaos Edition)
 # -------------------------------------------------
 
 def generate_instagram_caption(base_prompt: str, mode: str) -> str:
     """
-    IG Caption Rules:
-    - One punchy line (8–20 words)
-    - Slight Joanie-mode flavor
+    IG Caption Rules (Warm Chaos):
+    - One warm, witty, relatable line (8–20 words)
+    - Light Joanie flavor but NEVER sad or heavy
     - 0–1 emojis max
     - No hashtags
     """
 
-    # Prepare mood flavor
+    # Mood hints kept SAME — but usage changes to warm tone
     if mode in EXPLICIT_CAPTION_PHRASES:
-        mood_hint = f"{EXPLICIT_CAPTION_PHRASES[mode][0]}. "
+        mood_hint = EXPLICIT_CAPTION_PHRASES[mode][0]
     else:
-        mood_hint = f"{IMPLICIT_SCENTS[mode]}, "
+        mood_hint = IMPLICIT_SCENTS[mode]
 
     system_prompt = f"""
     You are Joanie writing Instagram captions for 'You Won't Believe This $H!T'.
 
+    NEW TONE:
+    - Warm, lightly chaotic, relatable, human
+    - Messy life moments, but in a funny, cozy, “we’re all in this together” way
+    - Absolutely NO darkness, sadness, doom, existential pain, or bleak humor
+
     Requirements:
-    - ONE punchy, clever line (8–20 words)
-    - Incorporate this mood hint naturally: "{mood_hint}"
-    - Slightly chaotic, witty, self-aware
+    - ONE line, 8–20 words max
+    - Slight flavor of this mood: "{mood_hint}"
+    - Light, witty, gently self-aware
     - 0–1 emojis MAX
     - No hashtags
     - No line breaks
-    - Connect loosely to the journaling prompt
+    - Should loosely connect to the journaling prompt
+
+    Style examples (DO NOT copy — match tone):
+    - "My brain scheduled three thoughts at once and somehow they all showed up."
+    - "Today’s chaos was weirdly wholesome, and honestly I’m not mad at it."
+    - "Trying to be an adult but also vibing through the confusion."
     """
 
     return _generate_caption(system_prompt, base_prompt, mode)
 
 # -------------------------------------------------
-# FACEBOOK CAPTIONS (restored functionality)
+# FACEBOOK CAPTIONS (unchanged)
 # -------------------------------------------------
 
 def generate_facebook_caption(base_prompt: str, mode: str) -> str:
