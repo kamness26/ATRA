@@ -1,17 +1,17 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
-# Caption Service – ATRA (Joanie Edition v2.0)
+# Caption Service – ATRA (Joanie Edition v2.1)
 #
 # Medium Joanie personality influence:
-# - IG captions: punchy, witty, mood-tinted  
+# - IG captions: soft-unhinged, diary-like, mood-tinted  
 # - FB captions: mini-narrative, warm, self-aware, mood-flavored  
 #
-# Mixed explicitness:
-#   corporate_burnout      → explicit tone  
-#   sunday_scaries         → explicit tone  
-#   adhd_spiral            → implicit tone  
-#   delusional_romantic    → implicit tone  
-#   existentially_exhausted → implicit tone  
+# Mood explicitness:
+#   corporate_burnout        → explicit tone  
+#   sunday_scaries           → explicit tone  
+#   adhd_spiral              → implicit tone  
+#   delusional_romantic      → implicit tone  
+#   existentially_exhausted  → implicit tone  
 #
 
 import os
@@ -22,7 +22,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Explicit mood signals for captions
 EXPLICIT_CAPTION_PHRASES = {
     "corporate_burnout": [
-        "Corporate burnout is doing numbers", 
+        "Corporate burnout is doing numbers",
         "Peak burnout vibes today",
         "Running on fumes and sarcasm",
     ],
@@ -57,36 +57,52 @@ def _generate_caption(system_prompt: str, base_prompt: str, mode: str) -> str:
     return caption.replace("\n", " ").strip()
 
 
+# ------------------------- IG CAPTION (UPDATED) ------------------------- #
+
 def generate_instagram_caption(base_prompt: str, mode: str) -> str:
     """
     IG Caption Rules:
-    - One punchy line (8–20 words)
-    - Slight Joanie-mode flavor
-    - 0–1 emojis max
+    - Option D: Soft-Unhinged + Chaotic-Funny Oversharer
+    - Human, diary-like, personal
+    - 1–2 short sentences MAX
+    - Slight Joanie-mode shading (explicit or implicit)
+    - First-person POV only
     - No hashtags
+    - 0–1 emojis max (only if natural)
     """
 
-    # Prepare mood flavor
+    # Mood shading
     if mode in EXPLICIT_CAPTION_PHRASES:
-        mood_hint = f"{EXPLICIT_CAPTION_PHRASES[mode][0]}. "
+        mood_hint = EXPLICIT_CAPTION_PHRASES[mode][0]   # explicit
     else:
-        mood_hint = f"{IMPLICIT_SCENTS[mode]}, "  # implicit
+        mood_hint = IMPLICIT_SCENTS.get(mode, "")       # implicit
 
     system_prompt = f"""
-    You are Joanie writing Instagram captions for 'You Won't Believe This $H!T'.
+    You are Joanie, a chaotic-relatable millennial woman narrating her inner world.
 
-    Requirements:
-    - ONE punchy, clever line (8–20 words)
-    - Incorporate this mood hint naturally: "{mood_hint}"
-    - Slightly chaotic, witty, self-aware
-    - 0–1 emojis MAX
-    - No hashtags
-    - No line breaks
-    - Should connect loosely to the journaling prompt
+    STYLE RULES:
+    - Write like you're texting a friend or journaling in your Notes app.
+    - Softly unhinged, subtly funny, but grounded and real.
+    - 1–2 short sentences max.
+    - No hashtags.
+    - No slogans, no “ad” tone.
+    - First-person voice only (I / me).
+    - The journaling prompt inspires the emotional subtext, not the literal text.
+    - Blend in this mood shading naturally: "{mood_hint}"
+
+    VIBE EXAMPLES (for style only, do NOT copy):
+    - “Trying to act normal but my brain is already three spirals deep.”
+    - “Honestly shocked by how quickly I can unravel on a Tuesday.”
+    - “I wish my thoughts came with a warning label.”
+    - “Today wasn’t bad, but my mind insisted on making it… something.”
+
+    Output ONLY the caption.
     """
 
     return _generate_caption(system_prompt, base_prompt, mode)
 
+
+# ------------------------- FB CAPTION (UNCHANGED) ------------------------- #
 
 def generate_facebook_caption(base_prompt: str, mode: str) -> str:
     """
@@ -98,7 +114,6 @@ def generate_facebook_caption(base_prompt: str, mode: str) -> str:
     - No hashtags, no links
     """
 
-    # Select explicit or implicit mood flavor
     if mode in EXPLICIT_CAPTION_PHRASES:
         mood_hint = EXPLICIT_CAPTION_PHRASES[mode][1]
     else:
