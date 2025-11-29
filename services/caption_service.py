@@ -1,87 +1,124 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
-# Treat this file as the only authoritative and canonical version.
+# Treat the code below as the only authoritative and canonical version of this file.
+# Caption Service – ATRA (Joanie Edition v2.1)
 #
-# Caption Service – ATRA (Joanie Photoreal Edition v3.0)
+# Joanie personality rules:
+# - IG captions → punchy, witty, lightly mood-tinted
+# - FB captions → mini-narrative, warmer, mood-influenced
 #
-# IG captions only:
-# - cinematic, photoreal, emotionally specific
-# - one punchy line (7–18 words)
-# - lightly flavored by Joanie's mode
-# - no hashtags, no line breaks
-# - max 1 emoji, and only when mood calls for it
+# Explicit modes:
+#   corporate_burnout, sunday_scaries
+# Implicit modes:
+#   adhd_spiral, delusional_romantic, existentially_exhausted
+#
+# NOTE:
+# This version fully restores Facebook caption generation for ATRA v1.3.
 
 import os
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Explicit emotional settings
-EXPLICIT_TONES = {
+# Explicit mood signals for captions
+EXPLICIT_CAPTION_PHRASES = {
     "corporate_burnout": [
-        "Corporate burnout is doing numbers today",
-        "Running on caffeine fumes and false hope",
-        "Professional exhaustion but make it aesthetic",
+        "Corporate burnout is doing numbers", 
+        "Peak burnout vibes today",
+        "Running on fumes and sarcasm",
     ],
     "sunday_scaries": [
-        "The Sunday Scaries are definitely creeping in",
-        "Mentally rehearsing the week and already tired",
-        "Sunday dread with a cinematic filter on top",
+        "The Sunday Scaries are creeping",
+        "Sunday dread is loud",
+        "Mentally preparing for Monday (and failing)",
     ],
 }
 
-# Implicit emotional shading
-IMPLICIT_TONES = {
+# Implicit emotional shading for other modes
+IMPLICIT_SCENTS = {
     "adhd_spiral": "with a brain sprinting in twelve directions",
-    "delusional_romantic": "with wildly unrealistic optimism",
-    "existentially_exhausted": "while quietly questioning everything",
+    "delusional_romantic": "with dangerously delusional romantic optimism",
+    "existentially_exhausted": "while questioning every life choice ever",
 }
 
-
-def _call_model(system_prompt: str, base_prompt: str, mode: str) -> str:
-    """Internal helper for caption generation."""
+def _generate_caption(system_prompt: str, base_prompt: str, mode: str) -> str:
+    """Internal helper to generate caption text."""
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": system_prompt.strip()},
             {"role": "user", "content": f"Prompt:\n{base_prompt}\nMode:\n{mode}"},
         ],
-        temperature=0.75,
-        max_tokens=60,
+        temperature=0.85,
+        max_tokens=120,
     )
 
     caption = response.choices[0].message.content.strip()
     return caption.replace("\n", " ").strip()
 
+# -------------------------------------------------
+# INSTAGRAM CAPTIONS
+# -------------------------------------------------
 
 def generate_instagram_caption(base_prompt: str, mode: str) -> str:
     """
-    IG Caption Style (Photoreal Joanie Mode):
-    - Cinematic, emotional, slightly chaotic
-    - One line only (7–18 words)
-    - Reflects Joanie's internal weather
+    IG Caption Rules:
+    - One punchy line (8–20 words)
+    - Slight Joanie-mode flavor
+    - 0–1 emojis max
     - No hashtags
-    - Max 1 emoji, optional
     """
 
-    # Mood selection
-    if mode in EXPLICIT_TONES:
-        mood_hint = EXPLICIT_TONES[mode][0]  # first explicit phrase
+    # Prepare mood flavor
+    if mode in EXPLICIT_CAPTION_PHRASES:
+        mood_hint = f"{EXPLICIT_CAPTION_PHRASES[mode][0]}. "
     else:
-        mood_hint = IMPLICIT_TONES[mode]
+        mood_hint = f"{IMPLICIT_SCENTS[mode]}, "
 
     system_prompt = f"""
-    You are Joanie writing Instagram captions for photoreal images that reflect
-    emotional states, inner spirals, and quiet chaos.
+    You are Joanie writing Instagram captions for 'You Won't Believe This $H!T'.
 
     Requirements:
-    - Write ONE cinematic line (7–18 words).
-    - Tone: moody, witty, emotionally self-aware, slightly dramatic.
-    - Incorporate this mood influence subtly: "{mood_hint}".
-    - Absolutely no hashtags.
-    - Absolutely no line breaks.
-    - Max ONE emoji allowed, only if it fits naturally.
-    - Caption must feel like it pairs with a photoreal scene, not a poster.
-    - Do NOT reference: posters, text, graphics, Atty, logos, design, layouts.
+    - ONE punchy, clever line (8–20 words)
+    - Incorporate this mood hint naturally: "{mood_hint}"
+    - Slightly chaotic, witty, self-aware
+    - 0–1 emojis MAX
+    - No hashtags
+    - No line breaks
+    - Connect loosely to the journaling prompt
     """
 
-    return _call_model(system_prompt, base_prompt, mode)
+    return _generate_caption(system_prompt, base_prompt, mode)
+
+# -------------------------------------------------
+# FACEBOOK CAPTIONS (restored functionality)
+# -------------------------------------------------
+
+def generate_facebook_caption(base_prompt: str, mode: str) -> str:
+    """
+    FB Caption Rules:
+    - 1–2 short sentences
+    - Mini-narrative, tiny confession or emotional moment
+    - Includes EXACTLY one emoji
+    - Slight Joanie-mode flavor
+    - No hashtags, no links
+    """
+
+    # Explicit or implicit mood flavor
+    if mode in EXPLICIT_CAPTION_PHRASES:
+        mood_hint = EXPLICIT_CAPTION_PHRASES[mode][1]
+    else:
+        mood_hint = IMPLICIT_SCENTS[mode]
+
+    system_prompt = f"""
+    You are Joanie writing Facebook captions for 'You Won't Believe This $H!T'.
+
+    Requirements:
+    - Write 1–2 short sentences as a mini story/confession.
+    - Incorporate this tone subtly: "{mood_hint}"
+    - Blend humor with emotional self-awareness.
+    - End with EXACTLY one emoji.
+    - No hashtags, no links.
+    - No line breaks.
+    """
+
+    return _generate_caption(system_prompt, base_prompt, mode)
