@@ -1,7 +1,7 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
 #
-# Image Service – ATRA (Photorealistic Flat-Lay Edition v3.0)
+# Image Service – ATRA (Photorealistic Flat-Lay Edition v3.1)
 #
 # New direction:
 # - No posters, no graphics, no Atty
@@ -13,7 +13,7 @@
 #   keys, headphones, sticky notes, receipts, tote bag, water bottle, laptop corner, etc.
 # - Joanie’s “modes” appear subtly through the chaos, NOT through darkness.
 #
-# Output: 1024×1024 JPEG, photorealistic overhead shot.
+# Output: 1024×1024 JPEG, photorealistic overhead shot, Instagram-safe (baseline sRGB JPEG).
 
 import os
 import base64
@@ -82,15 +82,14 @@ def generate_image(prompt: str, mode: str) -> str:
     COLOR PALETTE:
     - Muted earth tones: deep browns, blacks, tan, olive, beige.
     - Metallic pen elements allowed.
-    - Absolutely no neon or harsh color pops.
+    - No neon or harsh color pops.
 
     STYLE:
     - High-contrast but warm.
     - Editorial magazine aesthetic.
     - Chaotic in a human, funny, relatable way — not sad.
-    - No illustrations, no poster graphics, no drawn elements.
     - 100% real-world camera realism.
-    - Depth preserved through shadows and object texture.
+    - No illustrations, no poster graphics, no drawn elements.
 
     MOOD INFLUENCE BASED ON JOANIE MODE:
     {mood_influence}
@@ -111,12 +110,22 @@ def generate_image(prompt: str, mode: str) -> str:
     # Decode → PIL
     image_b64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_b64)
-    pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
+    pil_image = Image.open(BytesIO(image_bytes))
 
-    # Save
+    # --- IG Safety Fix: force sRGB + baseline JPEG ---
+    pil_image = pil_image.convert("RGB")
+
     os.makedirs("output", exist_ok=True)
     path = "output/generated_image.jpg"
-    pil_image.save(path, format="JPEG", quality=92)
+
+    pil_image.save(
+        path,
+        format="JPEG",
+        quality=90,
+        subsampling=0,       # highest quality, avoids chroma issues
+        optimize=True,       # better compression
+        progressive=False    # IG REQUIRES BASELINE JPEG
+    )
 
     print(f"✅ Image generated at: {path}")
     return path
