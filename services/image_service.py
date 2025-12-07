@@ -1,97 +1,105 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
 #
-# Image Service – ATRA (Photorealistic Flat-Lay Edition v3.2)
-#
-# Major update:
-# - Journal is ALWAYS CLOSED
-# - MUST display the exact real cover shown here:
-#   https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg
-# - Model must SHOW this cover, not reinterpret or redesign it.
-# - No substitutions like “The Five-Minute Journal.”
-#
-# Style: warm, cinematic flat-lay, lived-in chaos, not depressing.
-# Output: 1024×1024 baseline sRGB JPEG (Instagram-safe).
+# Image Service – ATRA (Photorealistic Flat-Lay Edition v3.3 – Real Cover Version)
 
 import os
 import base64
+from datetime import datetime
 from openai import OpenAI
 from PIL import Image
 from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# ---------------------------------------
-# Joanie mood cues → influences surrounding props
-# ---------------------------------------
+# Journal cover URL
+JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
+
+# Day-of-week item variations
+DAY_ITEMS = {
+    "monday": "iced coffee, laptop, work badge, receipts, tangled charger cable",
+    "tuesday": "iced coffee, highlighters, headphones, tote bag corner, sticky notes",
+    "wednesday": "water bottle, pens, keys, clean notepad sheet, lip balm",
+    "thursday": "beer bottle or beer can (subtle), keys, earbuds, scattered receipts",
+    "friday": "cocktail glass with garnish, lipstick, jewelry tray, sunglasses, camera",
+    "saturday": "cocktail glass, makeup items, film camera, lighter clutter, tote bag",
+    "sunday": "iced coffee, cozy candle, soft blanket texture, gentle clutter",
+}
+
+# Mood → object/lens cues
 MOOD_OBJECTS = {
     "corporate_burnout": """
-        Include items like: work badge, cold coffee, receipts, dead highlighter,
-        laptop corner, minimal jewelry. Lighting: warm desk glow.
+        Items: laptop corner, dried highlighter, work badge, cold coffee,
+        half-used sticky notes. Lighting: warm desk-lamp cinematic glow.
     """,
-
     "adhd_spiral": """
-        Include: tangled earbuds, multiple pens, scattered notes, keys drifting
-        out of frame, lipstick askew. Lighting: energetic but warm.
+        Items: tangled earbuds, scattered pens, lipstick half open,
+        slightly chaotic key placement. Lighting: energetic but warm.
     """,
-
     "delusional_romantic": """
-        Include: soft lipstick, a tiny flower, romantic doodles,
-        warm drink, gentle clutter. Lighting: dreamy warm highlights.
+        Items: soft lipstick, flower petal, warm coffee, heart doodle.
+        Lighting: dreamy warm highlights.
     """,
-
     "existentially_exhausted": """
-        Include: water bottle, minimal clutter, clean pen,
-        a single sticky note. Lighting: balanced, cinematic, NOT gloomy.
+        Items: water bottle, minimal clutter, clean pen, blank note.
+        Lighting: soft cool-but-warm-balanced cinematics.
     """,
-
     "sunday_scaries": """
-        Include: iced coffee, crumpled receipts, keys, tote bag corner,
-        subtle work reminders. Lighting: warm directional, slight vignette.
-    """,
+        Items: iced coffee, crumpled receipt, keys, tote bag corner.
+        Lighting: warm side lighting, slight vignette.
+    """
 }
 
 
+def _get_day_items() -> str:
+    day = datetime.now().strftime("%A").lower()
+    return DAY_ITEMS.get(day, DAY_ITEMS["monday"])
+
+
 def generate_image(prompt: str, mode: str) -> str:
-    print(f"🎨 Generating flat-lay Joanie image ({mode}) for prompt: {prompt}")
+    print(f"🎨 Generating flat-lay Joanie image ({mode}) – prompt: {prompt}")
 
     mood_influence = MOOD_OBJECTS.get(mode, "")
-
-    # 🔒 LOCK IN THE REAL COVER — NO REINTERPRETATION
-    real_cover_url = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
+    day_items = _get_day_items()
 
     visual_prompt = f"""
-    Create a photorealistic editorial flat-lay photograph shot from a perfect
-    overhead perspective. Warm, cinematic, lived-in chaos — but never sad.
+    Create a *photorealistic editorial-quality flat-lay photograph* shot from a perfect
+    overhead perspective. The scene must feel warm, cinematic, textured, and full of
+    relatable, lived-in chaos — but never depressing.
 
-    THE JOURNAL (MANDATORY):
-    - The journal must be CLOSED.
-    - It must display THIS EXACT REAL COVER:
-      {real_cover_url}
-    - The model should reproduce the cover faithfully as if photographed.
-    - Do NOT redesign, reinterpret, simplify, or replace it.
-    - Absolutely forbid other journals (e.g., "The Five-Minute Journal").
-      Only the real *You Won’t Believe This $H!T* cover is allowed.
+    THE JOURNAL (CRITICAL REQUIREMENT):
+    - The journal MUST be closed.
+    - It MUST display THIS EXACT REAL COVER as a physical object:
+      {JOURNAL_COVER_URL}
+    - Render the cover as a real printed book with natural lighting, shadows,
+      texture, reflections, and paper depth. Not a sticker, not a graphic overlay.
+    - The journal should sit naturally in the center of the composition.
 
-    REQUIRED OBJECTS:
-    - The closed journal centered in the scene.
-    - A pen nearby.
-    - Dark wooden desk surface.
-    - Cinematic directional lighting with warm, defined shadows.
+    REQUIRED SURROUNDING OBJECTS:
+    - A pen resting naturally beside the journal.
+    - Additional realistic everyday objects arranged as if recently used:
+      {day_items}
 
-    SURROUNDING CHAOS (varies by Joanie mode):
+    SURFACE & LIGHTING:
+    - Dark wooden desk with rich visible grain.
+    - Cinematic directional lighting with warm highlights and defined shadows.
+    - High contrast but warm temperature — cozy, not bleak.
+
+    STYLE:
+    - 100% camera-real image. No illustrations, icons, or digital graphics.
+    - Editorial magazine aesthetic.
+    - Depth and texture preserved (wood grain, metal reflections, paper fibers).
+    - Vary object placement daily, keep natural human chaos.
+
+    MOOD-BASED INFLUENCE:
     {mood_influence}
 
-    ADDITIONAL RULES:
-    - No posters, no illustrations, no graphic design.
-    - 100% real-world camera realism.
-    - Earthy muted tones only.
-    - Drinks appear depending on the day-of-week logic (handled upstream).
-    - The drink should appear naturally in the clutter, not as a focal point.
+    IMAGE SPECS:
+    - 1024 × 1024 resolution
+    - Photorealistic
+    - Instagram-safe baseline sRGB JPEG
 
-    Technical:
-    - Produce a final 1024×1024 photorealistic image.
-    - Respond ONLY with an image.
+    Respond ONLY with the generated image.
     """
 
     # --- OpenAI Image Call ---
@@ -102,12 +110,10 @@ def generate_image(prompt: str, mode: str) -> str:
         size="1024x1024"
     )
 
-    # Decode → PIL
     image_b64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_b64)
     pil_image = Image.open(BytesIO(image_bytes))
 
-    # IG compatibility: enforce baseline RGB JPEG
     pil_image = pil_image.convert("RGB")
 
     os.makedirs("output", exist_ok=True)
