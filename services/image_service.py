@@ -1,7 +1,7 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
 #
-# Image Service – ATRA (Photorealistic Flat-Lay Edition v4.0 – Real Cover Grounding)
+# Image Service – ATRA (Photorealistic Flat-Lay Edition v4.1 – Real Cover Grounding Fix)
 
 import os
 import base64
@@ -12,9 +12,10 @@ from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Journal cover image (REAL asset used as reference)
+# ✅ JOURNAL COVER IMAGE (Provide exact final Cloudinary URL here)
 JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
 
+# Day-of-week clutter items
 DAY_ITEMS = {
     "monday": "iced coffee, laptop, work badge, receipts, tangled charger cable",
     "tuesday": "iced coffee, highlighters, headphones, tote bag corner, sticky notes",
@@ -25,6 +26,7 @@ DAY_ITEMS = {
     "sunday": "iced coffee, cozy candle, soft blanket texture, gentle clutter",
 }
 
+# Mood-driven visual cues
 MOOD_OBJECTS = {
     "corporate_burnout": """
         Items: laptop corner, dried highlighter, work badge, cold coffee,
@@ -48,7 +50,9 @@ MOOD_OBJECTS = {
     """
 }
 
+
 def _get_day_items() -> str:
+    """Returns clutter items based on day of week."""
     day = datetime.now().strftime("%A").lower()
     return DAY_ITEMS.get(day, DAY_ITEMS["monday"])
 
@@ -59,36 +63,35 @@ def generate_image(prompt: str, mode: str) -> str:
     mood_influence = MOOD_OBJECTS.get(mode, "")
     day_items = _get_day_items()
 
-    # --- GROUNDED, STRICT-COVER PROMPT ---
+    # ------------------------------------------------------------
+    # PHOTOREALISTIC FLAT-LAY + REAL COVER GROUNDING PROMPT
+    # ------------------------------------------------------------
     visual_prompt = f"""
     Create a *photorealistic editorial-quality flat-lay photograph* shot from a perfect
     overhead perspective. The scene must feel warm, cinematic, textured, and full of
     relatable, lived-in chaos — but never depressing.
 
-    ## CRITICAL — USE THE REAL COVER AS PROVIDED (DO NOT ALTER)
+    ## CRITICAL — USE THE REAL COVER EXACTLY AS PROVIDED
     - The journal must be a matte-black paperback book.
-    - Use the EXACT cover image provided via reference.
-    - Apply it as a real printed book cover: correct proportions, no stretching,
-      no warping, no color changes, no redesign.
-    - The cover must appear exactly as printed: natural lighting, soft reflections,
-      realistic shadows, visible paper depth.
-    - The journal must be fully visible in the frame (no cropping of edges).
-    - The journal must be closed.
+    - Use the EXACT provided cover image as the book's printed front cover.
+    - Do NOT modify, redesign, recolor, warp, or reinterpret the cover.
+    - The printed cover must appear physically real with shadows, texture, and paper depth.
+    - The journal must be fully visible in the frame (no cropping).
+    - The journal must be closed and centered naturally.
 
     ## REQUIRED OBJECTS
-    - A pen resting naturally beside the journal.
-    - Additional realistic everyday items:
+    - A pen placed naturally beside the journal.
+    - Additional everyday objects creating natural human clutter:
       {day_items}
 
     ## SURFACE & LIGHTING
-    - Dark wooden desk with visible grain.
-    - Cinematic directional lighting with warm highlights + defined shadows.
-    - High contrast but cozy and warm.
+    - Dark wooden desk with rich visible grain.
+    - Cinematic directional lighting with warm highlights and defined shadows.
+    - Warm, editorial-quality contrast.
 
     ## STYLE
-    - 100% camera-real. No icons, drawings, stickers, fake graphics.
-    - Preserve tactile materials (wood grain, metal shine, paper texture).
-    - Natural, slightly imperfect human placement of objects.
+    - 100% camera-real. Absolutely no illustrated or digital UI elements.
+    - Maintain tactile materials: wood grain, metal reflections, paper texture.
 
     ## MOOD INFLUENCE
     {mood_influence}
@@ -96,11 +99,13 @@ def generate_image(prompt: str, mode: str) -> str:
     Respond ONLY with the generated grounded image.
     """
 
-    # --- OpenAI Image Call with real cover as reference ---
+    # ------------------------------------------------------------
+    # OpenAI Image Generation (Correct Parameter: image=[...])
+    # ------------------------------------------------------------
     result = client.images.generate(
         model="gpt-image-1",
         prompt=visual_prompt,
-        images=[{"url": JOURNAL_COVER_URL}],
+        image=[{"url": JOURNAL_COVER_URL}],  # ← FIXED (singular key)
         size="1024x1024",
         n=1,
     )
@@ -122,4 +127,3 @@ def generate_image(prompt: str, mode: str) -> str:
 
     print(f"✅ Grounded image generated at: {path}")
     return path
-
