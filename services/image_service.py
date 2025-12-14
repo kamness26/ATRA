@@ -1,7 +1,7 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
 #
-# Image Service – ATRA (Photorealistic Flat-Lay Edition v4.1 – Real Cover Grounding Fix)
+# Image Service – ATRA (Photorealistic Flat-Lay Edition v4.2 – Compatibility Fix)
 
 import os
 import base64
@@ -12,10 +12,9 @@ from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# ✅ JOURNAL COVER IMAGE (Provide exact final Cloudinary URL here)
+# Exact Cloudinary cover asset
 JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
 
-# Day-of-week clutter items
 DAY_ITEMS = {
     "monday": "iced coffee, laptop, work badge, receipts, tangled charger cable",
     "tuesday": "iced coffee, highlighters, headphones, tote bag corner, sticky notes",
@@ -26,7 +25,6 @@ DAY_ITEMS = {
     "sunday": "iced coffee, cozy candle, soft blanket texture, gentle clutter",
 }
 
-# Mood-driven visual cues
 MOOD_OBJECTS = {
     "corporate_burnout": """
         Items: laptop corner, dried highlighter, work badge, cold coffee,
@@ -52,7 +50,6 @@ MOOD_OBJECTS = {
 
 
 def _get_day_items() -> str:
-    """Returns clutter items based on day of week."""
     day = datetime.now().strftime("%A").lower()
     return DAY_ITEMS.get(day, DAY_ITEMS["monday"])
 
@@ -63,49 +60,46 @@ def generate_image(prompt: str, mode: str) -> str:
     mood_influence = MOOD_OBJECTS.get(mode, "")
     day_items = _get_day_items()
 
-    # ------------------------------------------------------------
-    # PHOTOREALISTIC FLAT-LAY + REAL COVER GROUNDING PROMPT
-    # ------------------------------------------------------------
+    # ----------------------------------------------------------
+    # PROMPT-BASED GROUNDING (since reference-image parameter is unsupported)
+    # ----------------------------------------------------------
     visual_prompt = f"""
-    Create a *photorealistic editorial-quality flat-lay photograph* shot from a perfect
-    overhead perspective. The scene must feel warm, cinematic, textured, and full of
-    relatable, lived-in chaos — but never depressing.
+    Create a *photorealistic editorial-quality flat-lay photograph* shot perfectly from above.
+    Warm, cinematic, textured, lived-in chaos — but not depressing.
 
-    ## CRITICAL — USE THE REAL COVER EXACTLY AS PROVIDED
-    - The journal must be a matte-black paperback book.
-    - Use the EXACT provided cover image as the book's printed front cover.
-    - Do NOT modify, redesign, recolor, warp, or reinterpret the cover.
-    - The printed cover must appear physically real with shadows, texture, and paper depth.
-    - The journal must be fully visible in the frame (no cropping).
-    - The journal must be closed and centered naturally.
+    ## USE THIS EXACT REAL JOURNAL COVER (DO NOT MODIFY)
+    - The cover appears at this URL: {JOURNAL_COVER_URL}
+    - Reproduce it *exactly* as printed: same colors, text, layout, proportions.
+    - Do NOT alter or reinterpret anything.
+    - Render as a physical matte-black paperback book.
+    - Full cover visible in the frame, no cropping.
+    - Natural shadows, reflections, and paper thickness visible.
 
     ## REQUIRED OBJECTS
-    - A pen placed naturally beside the journal.
-    - Additional everyday objects creating natural human clutter:
+    - A pen beside the journal.
+    - Everyday clutter items for the day of week:
       {day_items}
 
     ## SURFACE & LIGHTING
-    - Dark wooden desk with rich visible grain.
-    - Cinematic directional lighting with warm highlights and defined shadows.
-    - Warm, editorial-quality contrast.
+    - Dark wood desk with visible grain.
+    - Cinematic directional warm lighting, defined shadows.
 
     ## STYLE
-    - 100% camera-real. Absolutely no illustrated or digital UI elements.
-    - Maintain tactile materials: wood grain, metal reflections, paper texture.
+    - 100% camera-real. No illustrations, digital UI, or stickers.
+    - Preserve wood grain, metal shine, paper texture.
 
     ## MOOD INFLUENCE
     {mood_influence}
 
-    Respond ONLY with the generated grounded image.
+    Respond ONLY with the generated image.
     """
 
-    # ------------------------------------------------------------
-    # OpenAI Image Generation (Correct Parameter: image=[...])
-    # ------------------------------------------------------------
+    # ----------------------------------------------------------
+    # Image generation (NO image= parameter — fully compatible)
+    # ----------------------------------------------------------
     result = client.images.generate(
         model="gpt-image-1",
         prompt=visual_prompt,
-        image=[{"url": JOURNAL_COVER_URL}],  # ← FIXED (singular key)
         size="1024x1024",
         n=1,
     )
