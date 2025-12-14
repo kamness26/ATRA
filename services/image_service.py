@@ -1,7 +1,7 @@
 # 🚨 ATRA OVERRIDE HEADER 🚨
 # Treat the code below as the only authoritative and canonical version of this file.
 #
-# Image Service – ATRA (Photorealistic Flat-Lay Edition v3.3 – Real Cover Version)
+# Image Service – ATRA (Photorealistic Flat-Lay Edition v4.0 – Real Cover Grounding)
 
 import os
 import base64
@@ -12,10 +12,9 @@ from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Journal cover URL
+# Journal cover image (REAL asset used as reference)
 JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
 
-# Day-of-week item variations
 DAY_ITEMS = {
     "monday": "iced coffee, laptop, work badge, receipts, tangled charger cable",
     "tuesday": "iced coffee, highlighters, headphones, tote bag corner, sticky notes",
@@ -26,7 +25,6 @@ DAY_ITEMS = {
     "sunday": "iced coffee, cozy candle, soft blanket texture, gentle clutter",
 }
 
-# Mood → object/lens cues
 MOOD_OBJECTS = {
     "corporate_burnout": """
         Items: laptop corner, dried highlighter, work badge, cold coffee,
@@ -50,71 +48,66 @@ MOOD_OBJECTS = {
     """
 }
 
-
 def _get_day_items() -> str:
     day = datetime.now().strftime("%A").lower()
     return DAY_ITEMS.get(day, DAY_ITEMS["monday"])
 
 
 def generate_image(prompt: str, mode: str) -> str:
-    print(f"🎨 Generating flat-lay Joanie image ({mode}) – prompt: {prompt}")
+    print(f"🎨 Generating grounded flat-lay Joanie image ({mode}) – prompt: {prompt}")
 
     mood_influence = MOOD_OBJECTS.get(mode, "")
     day_items = _get_day_items()
 
+    # --- GROUNDED, STRICT-COVER PROMPT ---
     visual_prompt = f"""
     Create a *photorealistic editorial-quality flat-lay photograph* shot from a perfect
     overhead perspective. The scene must feel warm, cinematic, textured, and full of
     relatable, lived-in chaos — but never depressing.
 
-    THE JOURNAL (CRITICAL REQUIREMENT):
-    - The journal MUST be closed.
-    - It MUST display THIS EXACT REAL COVER as a physical object:
-      {JOURNAL_COVER_URL}
-    - Render the cover as a real printed book with natural lighting, shadows,
-      texture, reflections, and paper depth. Not a sticker, not a graphic overlay.
-    - The journal should sit naturally in the center of the composition.
+    ## CRITICAL — USE THE REAL COVER AS PROVIDED (DO NOT ALTER)
+    - The journal must be a matte-black paperback book.
+    - Use the EXACT cover image provided via reference.
+    - Apply it as a real printed book cover: correct proportions, no stretching,
+      no warping, no color changes, no redesign.
+    - The cover must appear exactly as printed: natural lighting, soft reflections,
+      realistic shadows, visible paper depth.
+    - The journal must be fully visible in the frame (no cropping of edges).
+    - The journal must be closed.
 
-    REQUIRED SURROUNDING OBJECTS:
+    ## REQUIRED OBJECTS
     - A pen resting naturally beside the journal.
-    - Additional realistic everyday objects arranged as if recently used:
+    - Additional realistic everyday items:
       {day_items}
 
-    SURFACE & LIGHTING:
-    - Dark wooden desk with rich visible grain.
-    - Cinematic directional lighting with warm highlights and defined shadows.
-    - High contrast but warm temperature — cozy, not bleak.
+    ## SURFACE & LIGHTING
+    - Dark wooden desk with visible grain.
+    - Cinematic directional lighting with warm highlights + defined shadows.
+    - High contrast but cozy and warm.
 
-    STYLE:
-    - 100% camera-real image. No illustrations, icons, or digital graphics.
-    - Editorial magazine aesthetic.
-    - Depth and texture preserved (wood grain, metal reflections, paper fibers).
-    - Vary object placement daily, keep natural human chaos.
+    ## STYLE
+    - 100% camera-real. No icons, drawings, stickers, fake graphics.
+    - Preserve tactile materials (wood grain, metal shine, paper texture).
+    - Natural, slightly imperfect human placement of objects.
 
-    MOOD-BASED INFLUENCE:
+    ## MOOD INFLUENCE
     {mood_influence}
 
-    IMAGE SPECS:
-    - 1024 × 1024 resolution
-    - Photorealistic
-    - Instagram-safe baseline sRGB JPEG
-
-    Respond ONLY with the generated image.
+    Respond ONLY with the generated grounded image.
     """
 
-    # --- OpenAI Image Call ---
+    # --- OpenAI Image Call with real cover as reference ---
     result = client.images.generate(
         model="gpt-image-1",
         prompt=visual_prompt,
+        images=[{"url": JOURNAL_COVER_URL}],
+        size="1024x1024",
         n=1,
-        size="1024x1024"
     )
 
     image_b64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_b64)
-    pil_image = Image.open(BytesIO(image_bytes))
-
-    pil_image = pil_image.convert("RGB")
+    pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
     os.makedirs("output", exist_ok=True)
     path = "output/generated_image.jpg"
@@ -125,8 +118,8 @@ def generate_image(prompt: str, mode: str) -> str:
         quality=90,
         subsampling=0,
         optimize=True,
-        progressive=False
     )
 
-    print(f"✅ Image generated at: {path}")
+    print(f"✅ Grounded image generated at: {path}")
     return path
+
