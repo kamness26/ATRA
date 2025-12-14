@@ -3,17 +3,20 @@
 #
 # Image Service – ATRA (Photorealistic Flat-Lay Edition v4.2 – Compatibility Fix)
 
-import os
 import base64
+import os
 from datetime import datetime
+from io import BytesIO
+
+import requests
 from openai import OpenAI
 from PIL import Image
-from io import BytesIO
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Exact Cloudinary cover asset
 JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
+COVER_CACHE_PATH = "output/_journal_cover_cache.jpg"
 
 DAY_ITEMS = {
     "monday": "iced coffee, laptop, work badge, receipts, tangled charger cable",
@@ -54,6 +57,47 @@ def _get_day_items() -> str:
     return DAY_ITEMS.get(day, DAY_ITEMS["monday"])
 
 
+def _load_cover_asset() -> Image.Image | None:
+    """
+    Retrieve the canonical journal cover image from Cloudinary.
+    Cached locally to avoid repeated downloads.
+    """
+    try:
+        os.makedirs("output", exist_ok=True)
+
+        if os.path.isfile(COVER_CACHE_PATH):
+            return Image.open(COVER_CACHE_PATH).convert("RGBA")
+
+        response = requests.get(JOURNAL_COVER_URL, timeout=20)
+        response.raise_for_status()
+        cover_image = Image.open(BytesIO(response.content)).convert("RGBA")
+        cover_image.save(COVER_CACHE_PATH)
+        return cover_image
+    except Exception as exc:
+        print(f"⚠️ Could not load cover asset from Cloudinary: {exc}")
+        return None
+
+
+def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
+    """
+    Paste the canonical cover onto the generated flat-lay to guarantee
+    the correct journal appears in the final post.
+    """
+    base_rgba = base.convert("RGBA")
+
+    # Scale cover to a consistent footprint within the frame
+    target_width = int(base_rgba.width * 0.45)
+    aspect_ratio = cover.height / cover.width
+    target_height = int(target_width * aspect_ratio)
+    cover_resized = cover.resize((target_width, target_height), Image.LANCZOS)
+
+    x = (base_rgba.width - target_width) // 2
+    y = (base_rgba.height - target_height) // 2
+
+    base_rgba.paste(cover_resized, (x, y), cover_resized)
+    return base_rgba.convert("RGB")
+
+
 def generate_image(prompt: str, mode: str) -> str:
     print(f"🎨 Generating grounded flat-lay Joanie image ({mode}) – prompt: {prompt}")
 
@@ -70,9 +114,9 @@ def generate_image(prompt: str, mode: str) -> str:
     ## USE THIS EXACT REAL JOURNAL COVER (DO NOT MODIFY)
     - The cover appears at this URL: {JOURNAL_COVER_URL}
     - Reproduce it *exactly* as printed: same colors, text, layout, proportions.
-    - Do NOT alter or reinterpret anything.
-    - Render as a physical matte-black paperback book.
-    - Full cover visible in the frame, no cropping.
+    - Do NOT alter or reinterpret anything. This is the canonical asset.
+    - Render as a physical matte-black paperback book with the cover perfectly centered.
+    - Full cover visible in the frame, no cropping or objects on top.
     - Natural shadows, reflections, and paper thickness visible.
 
     ## REQUIRED OBJECTS
@@ -107,6 +151,10 @@ def generate_image(prompt: str, mode: str) -> str:
     image_b64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_b64)
     pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
+
+    cover_image = _load_cover_asset()
+    if cover_image:
+        pil_image = _place_cover_on_image(pil_image, cover_image)
 
     os.makedirs("output", exist_ok=True)
     path = "output/generated_image.jpg"
