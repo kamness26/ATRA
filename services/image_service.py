@@ -90,7 +90,7 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
     target_height = int(target_width * aspect_ratio)
     cover_resized = cover.resize((target_width, target_height), Image.LANCZOS)
 
-    margin = max(4, target_width // 25)  # subtle book border
+    margin = max(2, target_width // 60)  # minimal border so cover matches book size
     book_w = target_width + 2 * margin
     book_h = target_height + 2 * margin
 
@@ -103,7 +103,13 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
 
     # Matte book body under the cover
     book = Image.new("RGBA", (book_w, book_h), (12, 12, 12, 255))
-    book.paste(cover_resized, (margin, margin), cover_resized)
+
+    # Feather the cover edges slightly so it blends into the matte body
+    feather_radius = max(1, target_width // 200)
+    cover_mask = Image.new("L", cover_resized.size, 255)
+    cover_mask = cover_mask.filter(ImageFilter.GaussianBlur(radius=feather_radius))
+
+    book.paste(cover_resized, (margin, margin), cover_mask)
 
     x = (base_rgba.width - book_w) // 2
     y = (base_rgba.height - book_h) // 2
