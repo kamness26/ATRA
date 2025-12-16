@@ -16,7 +16,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Exact Cloudinary cover asset
 JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
-COVER_CACHE_PATH = "output/_journal_cover_cache.jpg"
+COVER_CACHE_PATH = "output/_journal_cover_cache.png"
 
 DAY_ITEMS = {
     "monday": "iced coffee, laptop, work badge, receipts, tangled charger cable",
@@ -71,7 +71,7 @@ def _load_cover_asset() -> Image.Image:
         response = requests.get(JOURNAL_COVER_URL, timeout=20)
         response.raise_for_status()
         cover_image = Image.open(BytesIO(response.content)).convert("RGBA")
-        cover_image.save(COVER_CACHE_PATH)
+        cover_image.save(COVER_CACHE_PATH, format="PNG")
         return cover_image
     except Exception as exc:
         raise RuntimeError(f"Failed to load canonical journal cover: {exc}") from exc
