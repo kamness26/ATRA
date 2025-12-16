@@ -57,7 +57,7 @@ def _get_day_items() -> str:
     return DAY_ITEMS.get(day, DAY_ITEMS["monday"])
 
 
-def _load_cover_asset() -> Image.Image | None:
+def _load_cover_asset() -> Image.Image:
     """
     Retrieve the canonical journal cover image from Cloudinary.
     Cached locally to avoid repeated downloads.
@@ -74,8 +74,7 @@ def _load_cover_asset() -> Image.Image | None:
         cover_image.save(COVER_CACHE_PATH)
         return cover_image
     except Exception as exc:
-        print(f"⚠️ Could not load cover asset from Cloudinary: {exc}")
-        return None
+        raise RuntimeError(f"Failed to load canonical journal cover: {exc}") from exc
 
 
 def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
@@ -86,7 +85,7 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
     base_rgba = base.convert("RGBA")
 
     # Scale cover to a consistent footprint within the frame
-    target_width = int(base_rgba.width * 0.45)
+    target_width = int(base_rgba.width * 0.55)
     aspect_ratio = cover.height / cover.width
     target_height = int(target_width * aspect_ratio)
     cover_resized = cover.resize((target_width, target_height), Image.LANCZOS)
@@ -153,8 +152,8 @@ def generate_image(prompt: str, mode: str) -> str:
     pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
     cover_image = _load_cover_asset()
-    if cover_image:
-        pil_image = _place_cover_on_image(pil_image, cover_image)
+    print("📚 Overlaying canonical journal cover onto generated frame.")
+    pil_image = _place_cover_on_image(pil_image, cover_image)
 
     os.makedirs("output", exist_ok=True)
     path = "output/generated_image.jpg"
