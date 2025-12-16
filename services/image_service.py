@@ -10,7 +10,7 @@ from io import BytesIO
 
 import requests
 from openai import OpenAI
-from PIL import Image
+from PIL import Image, ImageFilter
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -84,16 +84,32 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
     """
     base_rgba = base.convert("RGBA")
 
-    # Scale cover to a consistent footprint within the frame
-    target_width = int(base_rgba.width * 0.55)
+    # Scale cover to a more natural footprint within the frame
+    target_width = int(base_rgba.width * 0.35)
     aspect_ratio = cover.height / cover.width
     target_height = int(target_width * aspect_ratio)
     cover_resized = cover.resize((target_width, target_height), Image.LANCZOS)
 
-    x = (base_rgba.width - target_width) // 2
-    y = (base_rgba.height - target_height) // 2
+    margin = max(4, target_width // 25)  # subtle book border
+    book_w = target_width + 2 * margin
+    book_h = target_height + 2 * margin
 
-    base_rgba.paste(cover_resized, (x, y), cover_resized)
+    # Simple soft shadow to give the book physicality
+    shadow_pad = max(6, target_width // 30)
+    shadow = Image.new("RGBA", (book_w + shadow_pad * 2, book_h + shadow_pad * 2), (0, 0, 0, 0))
+    shadow_rect = Image.new("RGBA", (book_w, book_h), (0, 0, 0, 80))
+    shadow.paste(shadow_rect, (shadow_pad, shadow_pad))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=shadow_pad / 2))
+
+    # Matte book body under the cover
+    book = Image.new("RGBA", (book_w, book_h), (12, 12, 12, 255))
+    book.paste(cover_resized, (margin, margin), cover_resized)
+
+    x = (base_rgba.width - book_w) // 2
+    y = (base_rgba.height - book_h) // 2
+
+    base_rgba.paste(shadow, (x - shadow_pad, y - shadow_pad), shadow)
+    base_rgba.paste(book, (x, y), book)
     return base_rgba.convert("RGB")
 
 
