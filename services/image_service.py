@@ -11,7 +11,7 @@ from io import BytesIO
 
 import requests
 from openai import OpenAI
-from PIL import Image, ImageChops, ImageEnhance, ImageFilter
+from PIL import Image, ImageChops, ImageEnhance, ImageFilter, ImageStat
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -103,12 +103,12 @@ def _load_cover_asset() -> Image.Image:
 
 def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
     """
-    Paste the canonical cover onto the generated flat-lay to guarantee
-    the correct journal appears in the final post.
+    Integrate the canonical cover onto the generated flat-lay so it reads as
+    the actual printed cover (matched size + lighting), not a pasted sticker.
     """
     base_rgba = base.convert("RGBA")
 
-    # Scale cover to a more natural footprint within the frame
+    # This must match the prompt instructions for notebook size/position.
     target_width = int(base_rgba.width * 0.35)
     aspect_ratio = cover.height / cover.width
     target_height = int(target_width * aspect_ratio)
@@ -127,31 +127,43 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
 
         return cover_rgb.convert("RGBA")
 
-    # The "book" footprint should match the cover exactly (no padding)
+    def _match_lighting(cover_rgba: Image.Image, under_rgb: Image.Image) -> Image.Image:
+        """
+        Use the luminance of the underlying notebook area as a soft shading map
+        so the cover inherits the same light falloff/shadows as the "book".
+        """
+        under_l = under_rgb.convert("L")
+        under_l = ImageEnhance.Contrast(under_l).enhance(1.15)
+        under_l = under_l.filter(ImageFilter.GaussianBlur(radius=max(2, target_width // 180)))
+
+        mean = ImageStat.Stat(under_l).mean[0] or 128.0
+        normalized = under_l.point(lambda p: int(max(0, min(255, (p * 128.0) / mean))))
+
+        # Convert normalized luminance into a multiplier map for ImageChops.multiply.
+        # 180..255 ~= 0.70..1.00 multiplier range.
+        shading = normalized.point(lambda p: int(180 + (p / 255.0) * 75))
+        shading_rgb = Image.merge("RGB", (shading, shading, shading))
+
+        cover_rgb = cover_rgba.convert("RGB")
+        lit_rgb = ImageChops.multiply(cover_rgb, shading_rgb)
+        return lit_rgb.convert("RGBA")
+
+    # The cover footprint should match the notebook exactly (no padding)
     cover_resized = _apply_matte_finish(cover_resized)
     book_w, book_h = cover_resized.size
-
-    # Simple soft shadow to give the book physicality
-    shadow_pad = max(6, target_width // 30)
-    shadow = Image.new("RGBA", (book_w + shadow_pad * 2, book_h + shadow_pad * 2), (0, 0, 0, 0))
-    shadow_rect = Image.new("RGBA", (book_w, book_h), (0, 0, 0, 80))
-    shadow.paste(shadow_rect, (shadow_pad, shadow_pad))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=shadow_pad / 2))
-
-    # Subtle inner edge shading to simulate paper wrap (keeps exact size)
-    edge = max(1, target_width // 220)
-    vignette = Image.new("L", (book_w, book_h), 0)
-    inner = Image.new("L", (max(1, book_w - 2 * edge), max(1, book_h - 2 * edge)), 255)
-    vignette.paste(inner, (edge, edge))
-    vignette = ImageChops.invert(vignette).filter(ImageFilter.GaussianBlur(radius=edge))
-    darken = Image.new("RGBA", (book_w, book_h), (0, 0, 0, 28))
-    cover_resized = Image.composite(darken, cover_resized, vignette)
 
     x = (base_rgba.width - book_w) // 2
     y = (base_rgba.height - book_h) // 2
 
-    base_rgba.paste(shadow, (x - shadow_pad, y - shadow_pad), shadow)
-    base_rgba.paste(cover_resized, (x, y), cover_resized)
+    under_region = base_rgba.convert("RGB").crop((x, y, x + book_w, y + book_h))
+    cover_lit = _match_lighting(cover_resized, under_region)
+
+    # Slight edge feathering so the cover prints "into" the notebook surface.
+    feather_radius = max(1, target_width // 220)
+    alpha = Image.new("L", (book_w, book_h), 255).filter(ImageFilter.GaussianBlur(radius=feather_radius))
+    cover_lit.putalpha(alpha)
+
+    base_rgba.paste(cover_lit, (x, y), cover_lit)
     return base_rgba.convert("RGB")
 
 
@@ -168,13 +180,12 @@ def generate_image(prompt: str, mode: str) -> str:
     Create a *photorealistic editorial-quality flat-lay photograph* shot perfectly from above.
     Warm, cinematic, textured, lived-in chaos — but not depressing.
 
-    ## USE THIS EXACT REAL JOURNAL COVER (DO NOT MODIFY)
-    - The cover appears at this URL: {JOURNAL_COVER_URL}
-    - Reproduce it *exactly* as printed: same colors, text, layout, proportions.
-    - Do NOT alter or reinterpret anything. This is the canonical asset.
-    - Render as a physical matte-black paperback book with the cover perfectly centered.
-    - Full cover visible in the frame, no cropping or objects on top.
-    - Natural shadows, reflections, and paper thickness visible.
+    ## NOTEBOOK (COVER OVERLAY WILL BE APPLIED AFTER GENERATION)
+    - A physical matte-black paperback notebook centered in frame.
+    - The notebook cover is BLANK (no text, no art, no logo) to allow a post-process cover overlay.
+    - Notebook occupies ~35% of image width and is perfectly aligned to the frame (no rotation).
+    - Full notebook visible, no cropping, nothing on top of it.
+    - Natural shadows/reflections and paper thickness visible.
 
     ## REQUIRED OBJECTS
     - A pen beside the journal.
