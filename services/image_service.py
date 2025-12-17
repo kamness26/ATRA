@@ -5,6 +5,7 @@
 
 import base64
 import os
+import random
 from datetime import datetime
 from io import BytesIO
 
@@ -19,14 +20,32 @@ JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v17542789
 COVER_CACHE_PATH = "output/_journal_cover_cache.png"
 
 DAY_ITEMS = {
-    "monday": "iced coffee, laptop, work badge, receipts, tangled charger cable",
-    "tuesday": "iced coffee, highlighters, headphones, tote bag corner, sticky notes",
-    "wednesday": "water bottle, pens, keys, clean notepad sheet, lip balm",
-    "thursday": "beer bottle or beer can (subtle), keys, earbuds, scattered receipts",
-    "friday": "cocktail glass with garnish, lipstick, jewelry tray, sunglasses, camera",
-    "saturday": "cocktail glass, makeup items, film camera, lighter clutter, tote bag",
-    "sunday": "iced coffee, cozy candle, soft blanket texture, gentle clutter",
+    "monday": "iced coffee, laptop corner, work badge, receipts, tangled charger cable, sticky notes, highlighter cap",
+    "tuesday": "iced coffee, highlighters, headphones, tote bag corner, sticky notes, open planner page, marker smudge",
+    "wednesday": "water bottle, pens, keys, clean notepad sheet, lip balm, hand cream tube, crumpled sticky note",
+    "thursday": "beer bottle or beer can (subtle), keys, earbuds, scattered receipts, coasters, bottle opener, napkin",
+    "friday": "cocktail glass with garnish, lipstick, jewelry tray, sunglasses, camera, hair clip, glittery receipt",
+    "saturday": "cocktail glass, makeup items, film camera, snack wrapper, tote bag, earrings, half-open compact",
+    "sunday": "iced coffee, cozy candle, soft blanket texture, gentle clutter, to-do list scrap, TV remote, pen cap",
 }
+
+EXTRA_CHAOS_ITEMS = [
+    "crumpled receipt",
+    "random business card",
+    "post-it with messy handwriting",
+    "loose bobby pins",
+    "ring or bracelet",
+    "opened gum or mint pack",
+    "USB cable",
+    "phone face down",
+    "small perfume roller",
+    "chapstick cap",
+    "tea bag wrapper",
+    "takeout sauce packet",
+    "ticket stub",
+    "tampon wrapper (subtle, not gross)",
+    "mini hand sanitizer",
+]
 
 MOOD_OBJECTS = {
     "corporate_burnout": """
@@ -54,7 +73,9 @@ MOOD_OBJECTS = {
 
 def _get_day_items() -> str:
     day = datetime.now().strftime("%A").lower()
-    return DAY_ITEMS.get(day, DAY_ITEMS["monday"])
+    base_items = DAY_ITEMS.get(day, DAY_ITEMS["monday"])
+    extras = ", ".join(random.sample(EXTRA_CHAOS_ITEMS, k=5))
+    return f"{base_items}, {extras}"
 
 
 def _load_cover_asset() -> Image.Image:
@@ -156,6 +177,8 @@ def generate_image(prompt: str, mode: str) -> str:
     - A pen beside the journal.
     - Everyday clutter items for the day of week:
       {day_items}
+    - Increase clutter density: MANY small objects, slightly overlapping, messy but photogenic.
+    - Some items can be partially cropped by the frame edges for a more chaotic look.
 
     ## SURFACE & LIGHTING
     - Dark wood desk with visible grain.
