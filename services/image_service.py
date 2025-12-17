@@ -11,12 +11,14 @@ from io import BytesIO
 
 import requests
 from openai import OpenAI
-from PIL import Image, ImageChops, ImageEnhance, ImageFilter, ImageStat
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter, ImageStat
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Image model version (upgrade target)
 IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1.5")
+IMAGE_EDIT_MODEL = os.getenv("OPENAI_IMAGE_EDIT_MODEL", IMAGE_MODEL)
+USE_IMAGE_EDIT = os.getenv("ATRA_USE_IMAGE_EDIT", "1").strip() not in {"0", "false", "False"}
 
 # Exact Cloudinary cover asset
 JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
@@ -167,6 +169,90 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
     return base_rgba.convert("RGB")
 
 
+def _create_center_cover_mask(canvas_size: tuple[int, int], cover_aspect_ratio: float) -> tuple[Image.Image, tuple[int, int, int, int]]:
+    """
+    Create a mask for the centered notebook cover region.
+
+    Mask format: RGBA PNG where transparent pixels are the editable region.
+    Returns (mask_image, (x0,y0,x1,y1)).
+    """
+    width, height = canvas_size
+    target_width = int(width * 0.35)
+    target_height = int(target_width * cover_aspect_ratio)
+    x0 = (width - target_width) // 2
+    y0 = (height - target_height) // 2
+    x1 = x0 + target_width
+    y1 = y0 + target_height
+
+    mask = Image.new("RGBA", (width, height), (0, 0, 0, 255))  # keep everything by default
+    draw = ImageDraw.Draw(mask)
+    corner_radius = max(8, target_width // 28)
+    draw.rounded_rectangle((x0, y0, x1, y1), radius=corner_radius, fill=(0, 0, 0, 0))  # edit region
+    return mask, (x0, y0, x1, y1)
+
+
+def _edit_in_cover(base_image: Image.Image, cover_image: Image.Image, mode: str, day_items: str) -> Image.Image:
+    """
+    Use the OpenAI image edit endpoint to apply the cover naturally (lighting/texture)
+    into the notebook area, instead of a hard pixel overlay.
+    """
+    os.makedirs("output", exist_ok=True)
+    base_path = "output/_base_flatlay.png"
+    mask_path = "output/_mask.png"
+    cover_path = "output/_cover.png"
+
+    base_image.convert("RGBA").save(base_path, format="PNG")
+    cover_image.convert("RGBA").save(cover_path, format="PNG")
+
+    cover_aspect_ratio = cover_image.height / cover_image.width
+    mask, _ = _create_center_cover_mask(base_image.size, cover_aspect_ratio)
+    mask.save(mask_path, format="PNG")
+
+    edit_prompt = f"""
+    You are editing a photorealistic top-down flat-lay photo.
+
+    Goal: replace ONLY the masked notebook cover area with the provided cover artwork image.
+    - The artwork MUST be placed with NO resizing mismatch: it must perfectly fill the notebook cover.
+    - Preserve the same angle/perspective (aligned to frame), and match lighting/shadows/reflections so it looks printed.
+    - Apply a subtle matte paperback print finish (slightly reduced glare, realistic paper texture).
+    - Do NOT change anything outside the mask.
+
+    Context (do not add new objects here, preserve the scene):
+    - Mood: {mode}
+    - Surrounding clutter: {day_items}
+    """
+
+    with open(base_path, "rb") as base_f, open(cover_path, "rb") as cover_f, open(mask_path, "rb") as mask_f:
+        try:
+            # Prefer passing both the base image and the cover image as inputs so the model can
+            # directly reference the exact artwork while editing the masked region.
+            result = client.images.edit(
+                model=IMAGE_EDIT_MODEL,
+                image=[base_f, cover_f],
+                mask=mask_f,
+                prompt=edit_prompt.strip(),
+                size="1024x1024",
+                n=1,
+            )
+        except Exception as exc:
+            # Fallback: some backends only accept a single input image for edits.
+            print(f"⚠️ images.edit with 2 images failed; retrying with base only. Error: {exc}")
+            base_f.seek(0)
+            mask_f.seek(0)
+            result = client.images.edit(
+                model=IMAGE_EDIT_MODEL,
+                image=base_f,
+                mask=mask_f,
+                prompt=edit_prompt.strip() + f"\n\nThe cover artwork reference is at: {JOURNAL_COVER_URL}",
+                size="1024x1024",
+                n=1,
+            )
+
+    image_b64 = result.data[0].b64_json
+    image_bytes = base64.b64decode(image_b64)
+    return Image.open(BytesIO(image_bytes)).convert("RGB")
+
+
 def generate_image(prompt: str, mode: str) -> str:
     print(f"🎨 Generating grounded flat-lay Joanie image ({mode}) – prompt: {prompt}")
 
@@ -180,9 +266,9 @@ def generate_image(prompt: str, mode: str) -> str:
     Create a *photorealistic editorial-quality flat-lay photograph* shot perfectly from above.
     Warm, cinematic, textured, lived-in chaos — but not depressing.
 
-    ## NOTEBOOK (COVER OVERLAY WILL BE APPLIED AFTER GENERATION)
+    ## NOTEBOOK (COVER WILL BE APPLIED VIA IMAGE EDIT)
     - A physical matte-black paperback notebook centered in frame.
-    - The notebook cover is BLANK (no text, no art, no logo) to allow a post-process cover overlay.
+    - The notebook cover is BLANK (no text, no art, no logo).
     - Notebook occupies ~35% of image width and is perfectly aligned to the frame (no rotation).
     - Full notebook visible, no cropping, nothing on top of it.
     - Natural shadows/reflections and paper thickness visible.
@@ -235,8 +321,17 @@ def generate_image(prompt: str, mode: str) -> str:
     pil_image = Image.open(BytesIO(image_bytes)).convert("RGB")
 
     cover_image = _load_cover_asset()
-    print("📚 Overlaying canonical journal cover onto generated frame.")
-    pil_image = _place_cover_on_image(pil_image, cover_image)
+    if USE_IMAGE_EDIT:
+        try:
+            print("🧩 Applying cover via OpenAI image edit (mask-based) for natural integration.")
+            pil_image = _edit_in_cover(pil_image, cover_image, mode=mode, day_items=day_items)
+        except Exception as exc:
+            print(f"⚠️ Image edit integration failed; falling back to local overlay. Error: {exc}")
+            print("📚 Overlaying canonical journal cover onto generated frame.")
+            pil_image = _place_cover_on_image(pil_image, cover_image)
+    else:
+        print("📚 Overlaying canonical journal cover onto generated frame.")
+        pil_image = _place_cover_on_image(pil_image, cover_image)
 
     os.makedirs("output", exist_ok=True)
     path = "output/generated_image.jpg"
