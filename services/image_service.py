@@ -10,7 +10,7 @@ from io import BytesIO
 
 import requests
 from openai import OpenAI
-from PIL import Image, ImageFilter
+from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -90,9 +90,22 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
     target_height = int(target_width * aspect_ratio)
     cover_resized = cover.resize((target_width, target_height), Image.LANCZOS)
 
-    margin = max(2, target_width // 60)  # minimal border so cover matches book size
-    book_w = target_width + 2 * margin
-    book_h = target_height + 2 * margin
+    def _apply_matte_finish(cover_rgba: Image.Image) -> Image.Image:
+        cover_rgb = cover_rgba.convert("RGB")
+        cover_rgb = ImageEnhance.Color(cover_rgb).enhance(0.92)
+        cover_rgb = ImageEnhance.Contrast(cover_rgb).enhance(0.96)
+        cover_rgb = ImageEnhance.Brightness(cover_rgb).enhance(0.98)
+        cover_rgb = cover_rgb.filter(ImageFilter.GaussianBlur(radius=0.25))
+
+        noise = Image.effect_noise(cover_rgb.size, 8).convert("L")
+        noise_rgb = Image.merge("RGB", (noise, noise, noise))
+        cover_rgb = Image.blend(cover_rgb, noise_rgb, alpha=0.03)
+
+        return cover_rgb.convert("RGBA")
+
+    # The "book" footprint should match the cover exactly (no padding)
+    cover_resized = _apply_matte_finish(cover_resized)
+    book_w, book_h = cover_resized.size
 
     # Simple soft shadow to give the book physicality
     shadow_pad = max(6, target_width // 30)
@@ -101,21 +114,20 @@ def _place_cover_on_image(base: Image.Image, cover: Image.Image) -> Image.Image:
     shadow.paste(shadow_rect, (shadow_pad, shadow_pad))
     shadow = shadow.filter(ImageFilter.GaussianBlur(radius=shadow_pad / 2))
 
-    # Matte book body under the cover
-    book = Image.new("RGBA", (book_w, book_h), (12, 12, 12, 255))
-
-    # Feather the cover edges slightly so it blends into the matte body
-    feather_radius = max(1, target_width // 200)
-    cover_mask = Image.new("L", cover_resized.size, 255)
-    cover_mask = cover_mask.filter(ImageFilter.GaussianBlur(radius=feather_radius))
-
-    book.paste(cover_resized, (margin, margin), cover_mask)
+    # Subtle inner edge shading to simulate paper wrap (keeps exact size)
+    edge = max(1, target_width // 220)
+    vignette = Image.new("L", (book_w, book_h), 0)
+    inner = Image.new("L", (max(1, book_w - 2 * edge), max(1, book_h - 2 * edge)), 255)
+    vignette.paste(inner, (edge, edge))
+    vignette = ImageChops.invert(vignette).filter(ImageFilter.GaussianBlur(radius=edge))
+    darken = Image.new("RGBA", (book_w, book_h), (0, 0, 0, 28))
+    cover_resized = Image.composite(darken, cover_resized, vignette)
 
     x = (base_rgba.width - book_w) // 2
     y = (base_rgba.height - book_h) // 2
 
     base_rgba.paste(shadow, (x - shadow_pad, y - shadow_pad), shadow)
-    base_rgba.paste(book, (x, y), book)
+    base_rgba.paste(cover_resized, (x, y), cover_resized)
     return base_rgba.convert("RGB")
 
 
