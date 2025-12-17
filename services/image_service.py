@@ -15,6 +15,9 @@ from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Image model version (upgrade target)
+IMAGE_MODEL = os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1.5")
+
 # Exact Cloudinary cover asset
 JOURNAL_COVER_URL = "https://res.cloudinary.com/dssvwcrqh/image/upload/v1754278923/1_pobsxq.jpg"
 COVER_CACHE_PATH = "output/_journal_cover_cache.png"
@@ -197,12 +200,24 @@ def generate_image(prompt: str, mode: str) -> str:
     # ----------------------------------------------------------
     # Image generation (NO image= parameter — fully compatible)
     # ----------------------------------------------------------
-    result = client.images.generate(
-        model="gpt-image-1",
-        prompt=visual_prompt,
-        size="1024x1024",
-        n=1,
-    )
+    try:
+        result = client.images.generate(
+            model=IMAGE_MODEL,
+            prompt=visual_prompt,
+            size="1024x1024",
+            n=1,
+        )
+    except Exception as exc:
+        if IMAGE_MODEL != "gpt-image-1":
+            print(f"⚠️ Image generation failed with {IMAGE_MODEL}; falling back to gpt-image-1. Error: {exc}")
+            result = client.images.generate(
+                model="gpt-image-1",
+                prompt=visual_prompt,
+                size="1024x1024",
+                n=1,
+            )
+        else:
+            raise
 
     image_b64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_b64)
