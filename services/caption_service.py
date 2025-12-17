@@ -6,9 +6,13 @@
 # FB captions remain unchanged.
 
 import os
+import re
 from openai import OpenAI
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Amazon CTA settings
+AMAZON_URL = os.getenv("AMAZON_URL", "https://a.co/d/5IG67WF")
 
 # Explicit mood signals
 EXPLICIT_CAPTION_PHRASES = {
@@ -44,6 +48,28 @@ def _generate_caption(system_prompt: str, base_prompt: str, mode: str) -> str:
     )
     caption = response.choices[0].message.content.strip()
     return caption.replace("\n", " ").strip()
+
+def _strip_emojis(text: str) -> str:
+    if not text:
+        return text
+    emoji_pattern = re.compile(
+        "["  # broadly covers most emoji + symbols used as emoji
+        "\U0001F1E6-\U0001F1FF"  # flags
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F680-\U0001F6FF"  # transport & map
+        "\U0001F700-\U0001F77F"  # alchemical symbols
+        "\U0001F780-\U0001F7FF"  # geometric shapes extended
+        "\U0001F800-\U0001F8FF"  # supplemental arrows-c
+        "\U0001F900-\U0001F9FF"  # supplemental symbols & pictographs
+        "\U0001FA00-\U0001FAFF"  # symbols & pictographs extended-a
+        "\u2600-\u26FF"          # misc symbols
+        "\u2700-\u27BF"          # dingbats
+        "\uFE0F"                 # variation selector-16
+        "]",
+        flags=re.UNICODE,
+    )
+    return emoji_pattern.sub("", text).strip()
 
 # -------------------------------------------------
 # INSTAGRAM CAPTIONS (with Amazon link appended)
@@ -83,13 +109,13 @@ def generate_instagram_caption(base_prompt: str, mode: str) -> str:
     # Amazon CTA (always added)
     amazon_block = (
         "\n\n📖 Available now on Amazon 👇\n"
-        "https://a.co/d/5IG67WF"
+        f"{AMAZON_URL}"
     )
 
     return caption + amazon_block
 
 # -------------------------------------------------
-# FACEBOOK CAPTIONS (unchanged)
+# FACEBOOK CAPTIONS (with Amazon CTA appended)
 # -------------------------------------------------
 
 def generate_facebook_caption(base_prompt: str, mode: str) -> str:
@@ -97,8 +123,7 @@ def generate_facebook_caption(base_prompt: str, mode: str) -> str:
     FB Caption Rules:
     - 1–2 short sentences
     - Mini-narrative
-    - Ends with EXACTLY one emoji
-    - No hashtags, no links
+    - No hashtags
     """
 
     if mode in EXPLICIT_CAPTION_PHRASES:
@@ -113,9 +138,18 @@ def generate_facebook_caption(base_prompt: str, mode: str) -> str:
     - Write 1–2 short sentences as a mini confession/story.
     - Incorporate this tone subtly: "{mood_hint}"
     - Blend humor with emotional self-awareness.
-    - End with EXACTLY one emoji.
-    - No hashtags, no links.
+    - Do NOT use any emoji. (CTA block includes emojis.)
+    - No hashtags.
     - No line breaks.
     """
 
-    return _generate_caption(system_prompt, base_prompt, mode)
+    caption = _generate_caption(system_prompt, base_prompt, mode)
+    caption = _strip_emojis(caption)
+
+    # Use the same CTA block as IG
+    amazon_block = (
+        "\n\n📖 Available now on Amazon 👇\n"
+        f"{AMAZON_URL}"
+    )
+
+    return caption + amazon_block
