@@ -3,10 +3,10 @@
 
 """
 ATRA Automation Orchestrator
-main.py v2.0 – Joanie Modes + Sora Video Integration (TikTok Phase 1)
+main.py v1.3 – Joanie Personality Modes (Phase 2: Mood Persistence)
 
-Pipeline:
-prompt → image → optional video → upload → sheet → Make.com (IG, FB, TikTok)
+Coordinates all services:
+prompt → image → upload → sheet → IG + FB (via Make.com)
 """
 
 from dotenv import load_dotenv
@@ -23,12 +23,11 @@ print("🔍 ENV check – CLOUDINARY_URL loaded:", bool(os.getenv("CLOUDINARY_UR
 from services.post_service import send_to_make_webhook
 from services.prompt_service import generate_prompt
 from services.image_service import generate_image
-from services.video_service import generate_video  # NEW
 from services.upload_service import upload_asset
 from services.sheet_service import update_sheet
 from services.caption_service import (
     generate_instagram_caption,
-    generate_facebook_caption,
+    generate_facebook_caption
 )
 
 # Joanie personality modes
@@ -44,7 +43,7 @@ STATE_FILE = "state/joanie_history.json"
 
 
 # ---------------------------------------------------------
-# Phase 2: Mood Persistence Engine
+# Phase 2: Mood Persistence Engine (Tier B)
 # ---------------------------------------------------------
 def _load_history():
     """Load last 5 modes from state file."""
@@ -69,39 +68,53 @@ def _save_history(history):
 
 
 def choose_joanie_mode():
-    """Weighted mood selection with Sunday override."""
+    """Choose next Joanie mode using:
+    - No repetition
+    - Recency down-weighting
+    - Rarity boosting
+    - Sunday override
+    """
     history = _load_history()
     today = datetime.now().strftime("%A")
 
-    # Sunday override
+    # --- 1. Sunday Scaries override ---
     if today == "Sunday":
-        if not history or history[-1] != "sunday_scaries":
+        # But avoid repeating
+        if len(history) == 0 or history[-1] != "sunday_scaries":
             _save_history(history + ["sunday_scaries"])
             return "sunday_scaries"
 
     last = history[-1] if history else None
 
-    weights = {m: 1.0 for m in PERSONALITY_MODES}
+    # --- 2. Base weights ---
+    weights = {
+        mode: 1.0 for mode in PERSONALITY_MODES.keys()
+    }
 
-    # No immediate repeat
+    # --- 3. No immediate repetition ---
     if last in weights:
         weights[last] = 0.0
 
-    # Recency down-weighting
-    for i, rm in enumerate(reversed(history)):
-        if rm in weights and weights[rm] > 0:
-            weights[rm] *= (0.7 - 0.1 * i)
+    # --- 4. Recency down-weighting ---
+    # recent modes get suppressed slightly
+    for i, recent_mode in enumerate(reversed(history)):
+        if recent_mode in weights and weights[recent_mode] > 0:
+            weights[recent_mode] *= (0.7 - 0.1 * i)  # gradually less
 
-    # Rarity boost
-    for m in PERSONALITY_MODES:
-        if m not in history:
-            weights[m] *= 1.6
+    # --- 5. Rarity boosting ---
+    # modes not seen in 5 runs get boosted
+    for mode in PERSONALITY_MODES:
+        if mode not in history:
+            weights[mode] *= 1.6
 
+    # Normalize and pick
     pool = [(m, w) for m, w in weights.items() if w > 0]
     modes, wts = zip(*pool)
     chosen = random.choices(modes, weights=wts, k=1)[0]
 
+    # Save
     _save_history(history + [chosen])
+
     return chosen
 
 
@@ -109,71 +122,54 @@ def choose_joanie_mode():
 # Main pipeline
 # ---------------------------------------------------------
 def run_once() -> None:
-    print("🚀 ATRA main.py v2.0 – starting run with Sora video support")
+    """Run the full ATRA pipeline once."""
+    print("🚀 ATRA main.py v1.3 – starting run (Phase 2 enabled)")
 
-    # 0. Choose emotional mode
+    # 0. Choose Joanie personality mode (Phase 2 engine)
     mode = choose_joanie_mode()
     emoji = PERSONALITY_MODES[mode]
     print(f"🎭 Joanie Mode → {mode} {emoji}")
 
-    # 1. Generate journaling prompt
+    # 1. Generate base journaling prompt
     prompt = generate_prompt(mode)
-    print(f"🧠 Prompt: {prompt}")
+    print(f"🧠 Prompt generated: {prompt}")
 
-    # 2. Generate base image (always)
+    # 2. Generate image using brand rules
     image_path = generate_image(prompt, mode)
-    print(f"🎨 Image generated: {image_path}")
+    print(f"🎨 Image generated at: {image_path}")
 
+    # 3. Upload to Cloudinary
     image_url = upload_asset(image_path)
-    print(f"☁️ Image uploaded: {image_url}")
+    print(f"☁️ Uploaded image to: {image_path}")
 
-    # 3. Attempt Sora video generation
-    #    If video fails, we still post image normally
-    video_url = None
-    media_type = "image"
+    # 4. Update Google Sheet log
+    update_sheet(prompt, image_url)
+    print("📒 Sheet updated successfully")
 
-    try:
-        print("🎥 Attempting Sora 2 video generation…")
-        # Reconstruct day-items logic by calling image_service helper
-        from services.image_service import _get_day_items
-        day_items = _get_day_items()
-
-        video_url = generate_video(prompt, mode, day_items)
-        media_type = "video"
-        print(f"🎬 Video generated + uploaded: {video_url}")
-
-    except Exception as exc:
-        print(f"⚠️ Sora video generation failed, falling back to image only. Reason: {exc}")
-
-    # 4. Log to Google Sheet (store both if available)
-    update_sheet(prompt, video_url or image_url)
-    print("📒 Sheet updated")
-
-    # 5. Captions for IG + FB
+    # 5. Generate platform-specific captions
     ig_caption = generate_instagram_caption(prompt, mode)
     fb_caption = generate_facebook_caption(prompt, mode)
 
-    print("📝 IG Caption:", ig_caption)
-    print("📝 FB Caption:", fb_caption)
+    print(f"📝 IG Caption: {ig_caption}")
+    print(f"📝 FB Caption: {fb_caption}")
 
-    # 6. Send to Make.com for posting to IG + FB + TikTok
+    # 6. Send to Make.com (IG + FB posting handled inside Make)
     WEBHOOK_URL = "https://hook.us2.make.com/cx9uy79z1rar2h907adqw8mhbunppnt7"
 
-    print("📨 Sending media to Make.com…")
+    print("📨 Sending post to Instagram + Facebook via Make.com...")
     posted = send_to_make_webhook(
-        ig_caption=ig_caption,
-        fb_caption=fb_caption,
-        media_url=video_url or image_url,
-        media_type=media_type,       # NEW → image or video
-        webhook_url=WEBHOOK_URL,
+        ig_caption,
+        fb_caption,
+        image_url,
+        WEBHOOK_URL
     )
 
     if posted:
         print("✅ Social post sent successfully.")
     else:
-        print("⚠️ Something went wrong sending to Make.com.")
+        print("⚠️ Social post failed. Check logs.")
 
-    print("🎉 ATRA run complete.")
+    print("✅ ATRA run complete.")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,0 @@
-# Privacy Policy
-
-ATRA Social Engine is an internal automation tool used solely by the owner of this TikTok account.
-It does not collect, store, or share any user data.
-No personal information is processed outside of TikTok’s platform.
-
-Contact: kamyar.a.hassid@gmail.com
