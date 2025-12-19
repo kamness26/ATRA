@@ -197,3 +197,12 @@ Next major milestone: **analytics ingestion + early optimization logic**.
 Built by **Kam (with a K)**.  
 Engineered to turn chaos into content — automatically.  
 Powered by OpenAI, Cloudinary, Google Sheets, Make.com, and GitHub Actions.
+
+## ATRA Social Engine
+
+**Legal Documents**
+- [Privacy Policy](https://kamness26.github.io/ATRA/privacy-policy.html)
+- [Terms of Service](https://kamness26.github.io/ATRA/terms-of-service.html)
+
+---
+
