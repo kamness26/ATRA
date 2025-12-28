@@ -198,6 +198,14 @@ Built by **Kam (with a K)**.
 Engineered to turn chaos into content — automatically.  
 Powered by OpenAI, Cloudinary, Google Sheets, Make.com, and GitHub Actions.
 
+---
+
+# 🎬 TikTok Posting (MVP)
+- Requires `TIKTOK_ACCESS_TOKEN` (TikTok user access token) in your environment or `.env`.
+- Usage: `python scripts/post_to_tiktok.py --video /path/to/video.mp4 --caption "Title" [--privacy SELF_ONLY|PUBLIC_TO_EVERYONE|MUTUAL_FOLLOW_FRIENDS|FOLLOWER_OF_CREATOR] [--poll]`
+- Defaults to `SELF_ONLY` privacy; unaudited clients stay private unless you explicitly set `--privacy PUBLIC_TO_EVERYONE`.
+- Uses TikTok Content Posting API (Direct Post) to init upload, PUT the MP4, and optionally poll publish status.
+
 ## ATRA Social Engine
 
 **Legal Documents**
@@ -205,4 +213,3 @@ Powered by OpenAI, Cloudinary, Google Sheets, Make.com, and GitHub Actions.
 - [Terms of Service](https://kamness26.github.io/ATRA/terms-of-service.html)
 
 ---
-
